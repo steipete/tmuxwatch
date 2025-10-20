@@ -8,6 +8,7 @@
 - Captures the active pane of every session and displays the latest output in scrollable cards that automatically follow new logs unless you scroll away manually.
 - Adapts the preview grid to however many sessions you have, giving each one a fair slice of terminal real estate.
 - Click a card to focus it—scroll with the mouse, type to forward keys straight into the underlying tmux pane, and close the card with the `[x]` button.
+- Cards briefly pulse when new output arrives so you can spot active panes at a glance.
 - Includes a `--dump` CLI flag so scripts (or curious humans) can print the current tmux state as JSON without launching the TUI.
 
 Use tmuxwatch when you want the situational awareness of a monitoring dashboard but prefer to stay inside a terminal workflow.

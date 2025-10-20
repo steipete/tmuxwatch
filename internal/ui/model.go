@@ -20,6 +20,13 @@ const (
 	cardPadding         = 1
 	closeLabel          = "[x]"
 	scrollStep          = 3
+	pulseDuration       = 1500 * time.Millisecond
+	borderColorBase     = "62"
+	borderColorFocus    = "212"
+	borderColorPulse    = "213"
+	headerColorBase     = "249"
+	headerColorFocus    = "212"
+	headerColorPulse    = "219"
 )
 
 type (
@@ -36,8 +43,10 @@ type (
 )
 
 type sessionPreview struct {
-	viewport *viewport.Model
-	paneID   string
+	viewport    *viewport.Model
+	paneID      string
+	lastContent string
+	lastChanged time.Time
 }
 
 type cardBounds struct {
@@ -135,12 +144,16 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, scheduleTick(m.pollInterval)
 	case paneContentMsg:
 		if preview, ok := m.previews[msg.sessionID]; ok && preview.paneID == msg.paneID {
-			if msg.err != nil {
-				preview.viewport.SetContent("Pane capture error: " + msg.err.Error())
-			} else {
-				preview.viewport.SetContent(strings.TrimRight(msg.text, "\n"))
+			content := "Pane capture error: " + msg.err.Error()
+			if msg.err == nil {
+				content = strings.TrimRight(msg.text, "\n")
 			}
-			preview.viewport.GotoBottom()
+			if content != preview.lastContent {
+				preview.viewport.SetContent(content)
+				preview.lastContent = content
+				preview.lastChanged = time.Now()
+				preview.viewport.GotoBottom()
+			}
 		}
 	case tickMsg:
 		if m.inflight {
@@ -351,12 +364,13 @@ func (m *Model) ensurePreviewsAndCapture() tea.Cmd {
 			vp := viewport.New(0, minPreviewHeight)
 			vp.MouseWheelEnabled = false
 			vp.MouseWheelDelta = scrollStep
-			preview = &sessionPreview{viewport: &vp}
+			preview = &sessionPreview{viewport: &vp, lastChanged: time.Now()}
 			m.previews[session.ID] = preview
 		}
 		if preview.paneID != pane.ID {
 			preview.viewport.SetContent("")
 			preview.paneID = pane.ID
+			preview.lastContent = ""
 		}
 		cmds = append(cmds, fetchPaneContentCmd(m.client, session.ID, pane.ID, 400))
 	}
@@ -398,11 +412,12 @@ func (m *Model) renderSessionPreviews(offset int) string {
 
 	cardStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("62")).
+		BorderForeground(lipgloss.Color(borderColorBase)).
 		Padding(0, cardPadding)
 
 	var rendered []string
 	currentY := offset + 1
+	now := time.Now()
 
 	for _, session := range sessions {
 		window, ok := activeWindow(session)
@@ -419,17 +434,22 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		}
 
 		innerWidth := max(20, preview.viewport.Width)
-		headerContent := formatHeader(innerWidth, session, window, pane, session.ID == m.focusedSession)
+		pulsing := now.Sub(preview.lastChanged) < pulseDuration
+		focused := session.ID == m.focusedSession
+		headerContent := formatHeader(innerWidth, session, window, pane, focused, pulsing)
 		header := lipgloss.NewStyle().Render(headerContent)
 
 		body := preview.viewport.View()
-		card := cardStyle.Render(lipgloss.JoinVertical(lipgloss.Left, header, body))
 
-		if session.ID == m.focusedSession {
-			card = cardStyle.
-				BorderForeground(lipgloss.Color("212")).
-				Render(lipgloss.JoinVertical(lipgloss.Left, header, body))
+		borderStyle := cardStyle
+		switch {
+		case focused:
+			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorFocus))
+		case pulsing:
+			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorPulse))
 		}
+
+		card := borderStyle.Render(lipgloss.JoinVertical(lipgloss.Left, header, body))
 
 		rendered = append(rendered, card)
 
@@ -456,7 +476,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 	return lipgloss.JoinVertical(lipgloss.Left, rendered...)
 }
 
-func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux.Pane, focused bool) string {
+func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux.Pane, focused, pulsing bool) string {
 	label := fmt.Sprintf("%s · %s · %s", session.Name, window.Name, pane.TitleOrCmd())
 	labelWidth := lipgloss.Width(label)
 	spaceForLabel := width - len(closeLabel)
@@ -471,10 +491,14 @@ func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux
 		padding = 0
 	}
 	header := label + strings.Repeat(" ", padding) + closeLabel
-	if focused {
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("212")).Render(header)
+	switch {
+	case focused:
+		return lipgloss.NewStyle().Foreground(lipgloss.Color(headerColorFocus)).Render(header)
+	case pulsing:
+		return lipgloss.NewStyle().Foreground(lipgloss.Color(headerColorPulse)).Render(header)
+	default:
+		return lipgloss.NewStyle().Foreground(lipgloss.Color(headerColorBase)).Render(header)
 	}
-	return lipgloss.NewStyle().Foreground(lipgloss.Color("249")).Render(header)
 }
 
 func (m *Model) updatePreviewDimensions(count int) {
