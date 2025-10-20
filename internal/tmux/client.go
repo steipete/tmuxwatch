@@ -43,6 +43,8 @@ type Pane struct {
 	LastActivity  time.Time
 	CreatedAt     time.Time
 	Width, Height int
+	Dead          bool
+	DeadStatus    int
 }
 
 // Snapshot contains the state of the tmux server.
@@ -207,6 +209,8 @@ func (c *Client) listPanes(ctx context.Context) ([]Pane, error) {
 		"#{pane_width}",
 		"#{pane_height}",
 		"#{pane_tty}",
+		"#{pane_dead}",
+		"#{pane_dead_status}",
 	}, "\t")
 
 	cmd := exec.CommandContext(ctx, c.bin, "list-panes", "-a", "-F", format)
@@ -222,7 +226,7 @@ func (c *Client) listPanes(ctx context.Context) ([]Pane, error) {
 			continue
 		}
 		fields := strings.Split(line, "\t")
-		if len(fields) < 12 {
+		if len(fields) < 14 {
 			return nil, fmt.Errorf("list-panes: malformed line %q", line)
 		}
 		active := fields[3] == "1"
@@ -254,6 +258,12 @@ func (c *Client) listPanes(ctx context.Context) ([]Pane, error) {
 			Width:        width,
 			Height:       height,
 			TTY:          fields[11],
+			Dead:         fields[12] == "1",
+		}
+		if status := strings.TrimSpace(fields[13]); status != "" {
+			if v, err := strconv.Atoi(status); err == nil {
+				pane.DeadStatus = v
+			}
 		}
 		panes = append(panes, pane)
 	}
@@ -285,6 +295,17 @@ func (p Pane) TitleOrCmd() string {
 		return cmd
 	}
 	return "pane"
+}
+
+// StatusString returns a human-readable description of the pane's execution state.
+func (p Pane) StatusString() string {
+	if !p.Dead {
+		return "running"
+	}
+	if p.DeadStatus == 0 {
+		return "exit 0"
+	}
+	return fmt.Sprintf("exit %d", p.DeadStatus)
 }
 
 // CapturePane retrieves the latest contents of a pane. lines determines how far back to capture.

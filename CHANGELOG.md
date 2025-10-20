@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Added live search/filter across sessions, windows, and panes.
 - Mouse support: click to focus, scroll, and close cards; printable keys now forward to the focused tmux pane.
 - Cards pulse briefly when new output arrives to highlight active panes.
+- Headers now surface pane last activity timestamps and exit statuses.
 - Added `.golangci.yml`, gofumpt formatting, `Makefile` helpers, and documentation for modern Go lint/format tooling.
 - Integrated Bubble Tea viewport to clamp pane height, enable scrolling (ctrl+d/u, ctrl+f/b, g/G), and prevent oversized buffers from blowing up the layout.
 - Documented tmuxwatch intent and primary use cases in the README.

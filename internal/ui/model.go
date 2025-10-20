@@ -24,9 +24,13 @@ const (
 	borderColorBase     = "62"
 	borderColorFocus    = "212"
 	borderColorPulse    = "213"
+	borderColorExitFail = "203"
+	borderColorExitOK   = "36"
 	headerColorBase     = "249"
 	headerColorFocus    = "212"
 	headerColorPulse    = "219"
+	headerColorExitFail = "203"
+	headerColorExitOK   = "37"
 )
 
 type (
@@ -443,6 +447,10 @@ func (m *Model) renderSessionPreviews(offset int) string {
 
 		borderStyle := cardStyle
 		switch {
+		case pane.Dead && pane.DeadStatus != 0:
+			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorExitFail))
+		case pane.Dead:
+			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorExitOK))
 		case focused:
 			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorFocus))
 		case pulsing:
@@ -477,7 +485,17 @@ func (m *Model) renderSessionPreviews(offset int) string {
 }
 
 func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux.Pane, focused, pulsing bool) string {
+	var meta []string
+	if pane.Dead {
+		meta = append(meta, pane.StatusString())
+	}
+	if !pane.LastActivity.IsZero() {
+		meta = append(meta, fmt.Sprintf("last %s", coarseDuration(time.Since(pane.LastActivity))))
+	}
 	label := fmt.Sprintf("%s · %s · %s", session.Name, window.Name, pane.TitleOrCmd())
+	if len(meta) > 0 {
+		label += " · " + strings.Join(meta, " · ")
+	}
 	labelWidth := lipgloss.Width(label)
 	spaceForLabel := width - len(closeLabel)
 	if spaceForLabel < 1 {
@@ -491,14 +509,20 @@ func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux
 		padding = 0
 	}
 	header := label + strings.Repeat(" ", padding) + closeLabel
+	style := lipgloss.NewStyle()
 	switch {
+	case pane.Dead && pane.DeadStatus != 0:
+		style = style.Foreground(lipgloss.Color(headerColorExitFail))
+	case pane.Dead:
+		style = style.Foreground(lipgloss.Color(headerColorExitOK))
 	case focused:
-		return lipgloss.NewStyle().Foreground(lipgloss.Color(headerColorFocus)).Render(header)
+		style = style.Foreground(lipgloss.Color(headerColorFocus))
 	case pulsing:
-		return lipgloss.NewStyle().Foreground(lipgloss.Color(headerColorPulse)).Render(header)
+		style = style.Foreground(lipgloss.Color(headerColorPulse))
 	default:
-		return lipgloss.NewStyle().Foreground(lipgloss.Color(headerColorBase)).Render(header)
+		style = style.Foreground(lipgloss.Color(headerColorBase))
 	}
+	return style.Render(header)
 }
 
 func (m *Model) updatePreviewDimensions(count int) {
