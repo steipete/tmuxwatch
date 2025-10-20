@@ -307,7 +307,9 @@ func (m *Model) View() string {
 	}
 
 	var sections []string
-	offset := 0
+	title := renderTitleBar()
+	sections = append(sections, title)
+	offset := lipgloss.Height(title)
 	if m.searching {
 		search := renderSearchBar(m.searchInput)
 		sections = append(sections, search)
@@ -612,6 +614,15 @@ func renderSearchSummary(query string) string {
 		Padding(0, 2).
 		Foreground(lipgloss.Color("62")).
 		Render(fmt.Sprintf("Filter: %s (press / to edit, esc to clear)", query))
+}
+
+func renderTitleBar() string {
+	style := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("231")).
+		Background(lipgloss.Color("62")).
+		Bold(true).
+		Padding(0, 2)
+	return style.Render("tmuxwatch ▸ live tmux monitor")
 }
 
 func sessionMatches(session tmux.Session, query string) bool {
