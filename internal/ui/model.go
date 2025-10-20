@@ -451,17 +451,19 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		return ""
 	}
 
+	cols := m.computeColumns(len(sessions))
 	baseStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(borderColorBase)).
 		Padding(0, cardPadding)
 
-	cardLeft := 0
-	var rendered []string
-	currentY := offset + 1
+	innerWidth := max(20, (m.width/cols)-(cardPadding*2+2))
+	innerHeight := max(minPreviewHeight, (m.height-offset-3)/max(1, (len(sessions)+cols-1)/cols))
+
+	rows := make([][]string, 0)
 	now := time.Now()
 
-	for _, session := range sessions {
+	for idx, session := range sessions {
 		window, ok := activeWindow(session)
 		if !ok {
 			continue
@@ -475,12 +477,13 @@ func (m *Model) renderSessionPreviews(offset int) string {
 			continue
 		}
 
-		innerWidth := max(20, preview.viewport.Width)
+		preview.viewport.Width = innerWidth
+		preview.viewport.Height = innerHeight
+
 		pulsing := now.Sub(preview.lastChanged) < pulseDuration
 		focused := session.ID == m.focusedSession
 		headerContent := formatHeader(innerWidth, session, window, pane, focused, pulsing)
 		header := lipgloss.NewStyle().Render(headerContent)
-
 		body := preview.viewport.View()
 
 		borderStyle := baseStyle
@@ -497,14 +500,16 @@ func (m *Model) renderSessionPreviews(offset int) string {
 
 		card := borderStyle.Render(lipgloss.JoinVertical(lipgloss.Left, header, body))
 
-		rendered = append(rendered, card)
+		rowIdx := idx / cols
+		if len(rows) <= rowIdx {
+			rows = append(rows, []string{})
+		}
+		rows[rowIdx] = append(rows[rowIdx], card)
 
-		height := lipgloss.Height(card)
 		width := lipgloss.Width(card)
 		closeWidth := len(closeLabel)
-		cardTop := currentY
-		currentY += height
-		left := cardLeft
+		colIndex := idx % cols
+		left := colIndex * (m.width / cols)
 		right := left + width - 1
 		closeRight := right - 1 - cardPadding
 		if closeRight > right {
@@ -516,14 +521,24 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		closeLeft := max(left, closeRight-closeWidth+1)
 		bounds := cardBounds{
 			sessionID:  session.ID,
-			top:        cardTop - 1,
-			bottom:     currentY - 2,
 			left:       left,
 			right:      right,
 			closeLeft:  closeLeft,
 			closeRight: closeRight,
 		}
 		m.cardLayout = append(m.cardLayout, bounds)
+	}
+
+	var rendered []string
+	for _, row := range rows {
+		if len(row) == 0 {
+			continue
+		}
+		padded := make([]string, 0, len(row))
+		for _, card := range row {
+			padded = append(padded, lipgloss.NewStyle().Width(innerWidth+cardPadding*2+2).Render(card))
+		}
+		rendered = append(rendered, lipgloss.JoinHorizontal(lipgloss.Left, padded...))
 	}
 
 	return lipgloss.JoinVertical(lipgloss.Left, rendered...)
@@ -774,6 +789,27 @@ func sendKeysCmd(client *tmux.Client, paneID string, keys ...string) tea.Cmd {
 
 func max(a, b int) int {
 	if a > b {
+		return a
+	}
+	return b
+}
+
+func (m *Model) computeColumns(count int) int {
+	cols := 1
+	if count >= 4 && m.width >= 80 {
+		cols = 2
+	}
+	if count >= 6 && m.width >= 120 {
+		cols = min(3, count)
+	}
+	if count >= 9 && m.width >= 160 {
+		cols = min(4, count)
+	}
+	return cols
+}
+
+func min(a, b int) int {
+	if a < b {
 		return a
 	}
 	return b
