@@ -7,7 +7,7 @@
 - Polls `tmux list-*` commands and renders a live dashboard so you can glance at everything that is running without detaching or memorising `tmux` incantations.
 - Captures the active pane of every session and displays the latest output in scrollable cards that automatically follow new logs unless you scroll away manually.
 - Adapts the preview grid to however many sessions you have, giving each one a fair slice of terminal real estate.
-- Includes a `--dump` CLI flag so scripts (or curious humans) can print the current tmux state as JSON without launching the TUI.
+- Click a card to focus it—scroll with the mouse, type to forward keys straight into the underlying tmux pane, and close the card with the `[x]` button.
 - Includes a `--dump` CLI flag so scripts (or curious humans) can print the current tmux state as JSON without launching the TUI.
 
 Use tmuxwatch when you want the situational awareness of a monitoring dashboard but prefer to stay inside a terminal workflow.
@@ -22,14 +22,24 @@ Use tmuxwatch when you want the situational awareness of a monitoring dashboard 
 
 - **CLI entrypoint** (`cmd/tmuxwatch/main.go`): parses flags, sets up the tmux client, and launches the Bubble Tea program.
 - **Tmux adapter** (`internal/tmux`): thin wrapper around the `tmux` binary that shells out to `list-sessions`, `list-windows`, and `list-panes`, parsing their structured output into Go structs. Periodically polls using a ticker (default 1 s) and emits diff events to the UI.
-- **TUI model** (`internal/ui`): Bubble Tea model that renders one scrollable viewport per tmux session. Each card shows the active window/pane, auto-refreshes its capture-pane output, and shares the available height evenly across sessions. A search bar filters sessions by title, window name, or pane command in real time.
+- **TUI model** (`internal/ui`): Bubble Tea model that renders one scrollable viewport per tmux session. Each card shows the active window/pane, auto-refreshes its capture-pane output, shares the available height evenly across sessions, exposes search, mouse interactions (focus/scroll/close), and forwards keystrokes to tmux.
 
-## Key Bindings
+## Keyboard & Mouse
 
-- `/` or `ctrl+f`: open the search bar to filter sessions/windows/panes
-- `esc`: close the search bar (clears focus) or abort the filter
+### Keyboard
+
+- `/` or `ctrl+f`: open the search bar to filter sessions, windows, or panes
+- `esc`: close the search bar or clear the active filter
+- `H`: show all hidden sessions again
+- `up` / `down`, `pgup` / `pgdown`, `ctrl+u` / `ctrl+d`, `g` / `G`: scroll the focused card
+- Printable keys (when a card is focused): forwarded to the tmux pane via `tmux send-keys`
 - `q` / `ctrl+c`: quit
-- Scroll inside a session card with standard viewport bindings (`ctrl+d`, `ctrl+u`, `ctrl+f`, `ctrl+b`, `g`, `G`)
+
+### Mouse
+
+- Left click a card to focus it (enabling keyboard input to tmux)
+- Scroll wheel over a card to move through its buffer
+- Click the `[x]` in the top-right corner of a card to hide it (press `H` to restore hidden cards)
 
 ## Requirements
 

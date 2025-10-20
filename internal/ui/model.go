@@ -16,15 +16,19 @@ import (
 
 const (
 	defaultPollInterval = time.Second
-	sidePadding         = 2
-	minPreviewHeight    = 5
+	minPreviewHeight    = 6
+	cardPadding         = 1
+	closeLabel          = "[x]"
+	scrollStep          = 3
 )
 
 type (
 	snapshotMsg    struct{ snapshot tmux.Snapshot }
 	paneContentMsg struct {
-		sessionID, paneID, text string
-		err                     error
+		sessionID string
+		paneID    string
+		text      string
+		err       error
 	}
 	errMsg        struct{ err error }
 	tickMsg       struct{}
@@ -36,7 +40,15 @@ type sessionPreview struct {
 	paneID   string
 }
 
-// Model drives the Bubble Tea UI.
+type cardBounds struct {
+	sessionID  string
+	top        int
+	bottom     int
+	closeLeft  int
+	closeRight int
+}
+
+// Model owns the Bubble Tea state machine.
 type Model struct {
 	client       *tmux.Client
 	pollInterval time.Duration
@@ -47,10 +59,14 @@ type Model struct {
 	sessions []tmux.Session
 
 	previews map[string]*sessionPreview
+	hidden   map[string]struct{}
 
 	searchInput textinput.Model
 	searching   bool
 	searchQuery string
+
+	focusedSession string
+	cardLayout     []cardBounds
 
 	lastUpdated time.Time
 	err         error
@@ -59,31 +75,33 @@ type Model struct {
 	cachedStatus string
 }
 
-// NewModel constructs a Model with sane defaults.
-func NewModel(client *tmux.Client, poll time.Duration) Model {
+// NewModel builds a Model with defaults.
+func NewModel(client *tmux.Client, poll time.Duration) *Model {
 	if poll <= 0 {
 		poll = defaultPollInterval
 	}
 	ti := textinput.New()
 	ti.Placeholder = "filter sessions, windows, panes"
 	ti.CharLimit = 256
-	ti.Width = 60
-	return Model{
+	ti.Prompt = "/ "
+	return &Model{
 		client:       client,
 		pollInterval: poll,
 		previews:     make(map[string]*sessionPreview),
+		hidden:       make(map[string]struct{}),
 		searchInput:  ti,
+		cardLayout:   make([]cardBounds, 0),
 		inflight:     true,
 	}
 }
 
-// Init starts polling tmux.
-func (m Model) Init() tea.Cmd {
+// Init starts initial polling.
+func (m *Model) Init() tea.Cmd {
 	return tea.Batch(fetchSnapshotCmd(m.client), scheduleTick(m.pollInterval))
 }
 
-// Update handles Bubble Tea messages.
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+// Update processes Bubble Tea messages.
+func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -93,15 +111,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.searching {
 			return m.handleSearchKey(msg)
 		}
-		switch msg.String() {
-		case "/", "ctrl+f":
-			m.searching = true
-			m.searchInput.SetValue(m.searchQuery)
-			m.searchInput.CursorEnd()
-			return m, nil
-		case "ctrl+c", "q":
-			return m, tea.Quit
+		if handled, cmd := m.handleGlobalKey(msg); handled {
+			return m, cmd
 		}
+		if handled, cmd := m.handleFocusedKey(msg); handled {
+			return m, cmd
+		}
+	case tea.MouseMsg:
+		return m.handleMouse(msg)
 	case searchBlurMsg:
 		m.searching = false
 	case snapshotMsg:
@@ -117,16 +134,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.err = msg.err
 		return m, scheduleTick(m.pollInterval)
 	case paneContentMsg:
-		preview, ok := m.previews[msg.sessionID]
-		if !ok || preview.paneID != msg.paneID {
-			return m, nil
+		if preview, ok := m.previews[msg.sessionID]; ok && preview.paneID == msg.paneID {
+			if msg.err != nil {
+				preview.viewport.SetContent("Pane capture error: " + msg.err.Error())
+			} else {
+				preview.viewport.SetContent(strings.TrimRight(msg.text, "\n"))
+			}
+			preview.viewport.GotoBottom()
 		}
-		content := "Error capturing pane."
-		if msg.err == nil {
-			content = strings.TrimRight(msg.text, "\n")
-		}
-		preview.viewport.SetContent(content)
-		preview.viewport.GotoBottom()
 	case tickMsg:
 		if m.inflight {
 			return m, nil
@@ -137,7 +152,163 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m Model) handleSearchKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m *Model) handleGlobalKey(msg tea.KeyMsg) (bool, tea.Cmd) {
+	switch msg.String() {
+	case "/", "ctrl+f":
+		m.searching = true
+		m.searchInput.SetValue(m.searchQuery)
+		m.searchInput.CursorEnd()
+		return true, nil
+	case "esc":
+		if m.searchQuery != "" {
+			m.searchQuery = ""
+			m.updatePreviewDimensions(m.filteredSessionCount())
+			return true, nil
+		}
+		return false, nil
+	case "H":
+		if len(m.hidden) > 0 {
+			m.hidden = make(map[string]struct{})
+			m.updatePreviewDimensions(m.filteredSessionCount())
+		}
+		return true, nil
+	case "q", "ctrl+c":
+		return true, tea.Quit
+	}
+	return false, nil
+}
+
+func (m *Model) handleFocusedKey(msg tea.KeyMsg) (bool, tea.Cmd) {
+	if m.focusedSession == "" {
+		return false, nil
+	}
+	preview, ok := m.previews[m.focusedSession]
+	if !ok {
+		return false, nil
+	}
+	switch msg.String() {
+	case "up":
+		_ = preview.viewport.ScrollUp(1)
+		return true, nil
+	case "down":
+		_ = preview.viewport.ScrollDown(1)
+		return true, nil
+	case "pgup":
+		preview.viewport.PageUp()
+		return true, nil
+	case "pgdown":
+		preview.viewport.PageDown()
+		return true, nil
+	case "ctrl+u":
+		_ = preview.viewport.ScrollUp(scrollStep)
+		return true, nil
+	case "ctrl+d":
+		_ = preview.viewport.ScrollDown(scrollStep)
+		return true, nil
+	case "g":
+		preview.viewport.GotoTop()
+		return true, nil
+	case "G":
+		preview.viewport.GotoBottom()
+		return true, nil
+	}
+
+	keys, ok := tmuxKeysFrom(msg)
+	if !ok || preview.paneID == "" {
+		return false, nil
+	}
+	return true, sendKeysCmd(m.client, preview.paneID, keys)
+}
+
+func tmuxKeysFrom(msg tea.KeyMsg) ([]string, bool) {
+	switch msg.Type {
+	case tea.KeyEnter:
+		return []string{"Enter"}, true
+	case tea.KeyTab:
+		return []string{"Tab"}, true
+	case tea.KeySpace:
+		return []string{" "}, true
+	case tea.KeyBackspace:
+		return []string{"BSpace"}, true
+	case tea.KeyDelete:
+		return []string{"Delete"}, true
+	case tea.KeyEsc:
+		return []string{"Escape"}, true
+	case tea.KeyRunes:
+		if msg.Alt {
+			return nil, false
+		}
+		return []string{string(msg.Runes)}, true
+	}
+	return nil, false
+}
+
+func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
+	if len(m.cardLayout) == 0 {
+		return m, nil
+	}
+	card, ok := m.cardAt(msg.Y)
+	if !ok {
+		return m, nil
+	}
+	preview := m.previews[card.sessionID]
+	switch {
+	case msg.Button == tea.MouseButtonWheelDown && msg.Action == tea.MouseActionPress:
+		if preview != nil {
+			_ = preview.viewport.ScrollDown(scrollStep)
+		}
+	case msg.Button == tea.MouseButtonWheelUp && msg.Action == tea.MouseActionPress:
+		if preview != nil {
+			_ = preview.viewport.ScrollUp(scrollStep)
+		}
+	case msg.Button == tea.MouseButtonLeft && msg.Action == tea.MouseActionPress:
+		if msg.Y == card.top+1 && msg.X >= card.closeLeft && msg.X <= card.closeRight {
+			m.hidden[card.sessionID] = struct{}{}
+			if m.focusedSession == card.sessionID {
+				m.focusedSession = ""
+			}
+			delete(m.previews, card.sessionID)
+			m.updatePreviewDimensions(m.filteredSessionCount())
+			return m, nil
+		}
+		m.focusedSession = card.sessionID
+		if preview != nil {
+			preview.viewport.GotoBottom()
+		}
+	}
+	return m, nil
+}
+
+// View renders the UI.
+func (m *Model) View() string {
+	if m.width == 0 || m.height == 0 {
+		return "loading..."
+	}
+
+	var sections []string
+	offset := 0
+	if m.searching {
+		search := renderSearchBar(m.searchInput)
+		sections = append(sections, search)
+		offset += lipgloss.Height(search)
+	} else if m.searchQuery != "" {
+		summary := renderSearchSummary(m.searchQuery)
+		sections = append(sections, summary)
+		offset += lipgloss.Height(summary)
+	}
+
+	previews := m.renderSessionPreviews(offset)
+	if previews == "" {
+		sections = append(sections, lipgloss.NewStyle().Padding(1, 2).Render("No sessions to display."))
+	} else {
+		sections = append(sections, previews)
+	}
+
+	sections = append(sections, m.renderStatus())
+	return lipgloss.JoinVertical(lipgloss.Left, sections...)
+}
+
+func (m *Model) handleSearchKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "esc":
 		m.searching = false
@@ -163,6 +334,9 @@ func (m *Model) ensurePreviewsAndCapture() tea.Cmd {
 	active := make(map[string]struct{}, len(m.sessions))
 	var cmds []tea.Cmd
 	for _, session := range m.sessions {
+		if m.isHidden(session.ID) {
+			continue
+		}
 		active[session.ID] = struct{}{}
 		window, ok := activeWindow(session)
 		if !ok {
@@ -172,9 +346,11 @@ func (m *Model) ensurePreviewsAndCapture() tea.Cmd {
 		if !ok {
 			continue
 		}
-		preview, exists := m.previews[session.ID]
-		if !exists {
+		preview := m.previews[session.ID]
+		if preview == nil {
 			vp := viewport.New(0, minPreviewHeight)
+			vp.MouseWheelEnabled = false
+			vp.MouseWheelDelta = scrollStep
 			preview = &sessionPreview{viewport: &vp}
 			m.previews[session.ID] = preview
 		}
@@ -195,53 +371,39 @@ func (m *Model) ensurePreviewsAndCapture() tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-func (m Model) filteredSessionCount() int {
+func (m *Model) filteredSessions() []tmux.Session {
+	var out []tmux.Session
+	query := strings.ToLower(m.searchQuery)
+	for _, session := range m.sessions {
+		if m.isHidden(session.ID) {
+			continue
+		}
+		if query == "" || sessionMatches(session, query) {
+			out = append(out, session)
+		}
+	}
+	return out
+}
+
+func (m *Model) filteredSessionCount() int {
 	return len(m.filteredSessions())
 }
 
-func (m Model) filteredSessions() []tmux.Session {
-	if m.searchQuery == "" {
-		return m.sessions
-	}
-	var filtered []tmux.Session
-	q := strings.ToLower(m.searchQuery)
-	for _, session := range m.sessions {
-		if sessionMatches(session, q) {
-			filtered = append(filtered, session)
-		}
-	}
-	return filtered
-}
-
-// View renders the interface.
-func (m Model) View() string {
-	if m.width == 0 || m.height == 0 {
-		return "loading..."
-	}
-	var rows []string
-	if m.searching {
-		rows = append(rows, renderSearchBar(m.searchInput))
-	} else if m.searchQuery != "" {
-		rows = append(rows, renderSearchSummary(m.searchQuery))
-	}
-
-	previews := m.renderSessionPreviews()
-	if previews == "" {
-		rows = append(rows, lipgloss.NewStyle().Padding(1, 2).Render("No sessions match the current filter."))
-	} else {
-		rows = append(rows, previews)
-	}
-	rows = append(rows, m.renderStatus())
-	return lipgloss.JoinVertical(lipgloss.Left, rows...)
-}
-
-func (m Model) renderSessionPreviews() string {
+func (m *Model) renderSessionPreviews(offset int) string {
 	sessions := m.filteredSessions()
+	m.cardLayout = m.cardLayout[:0]
 	if len(sessions) == 0 {
 		return ""
 	}
 
+	cardStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("62")).
+		Padding(0, cardPadding)
+
 	var rendered []string
+	currentY := offset + 1
+
 	for _, session := range sessions {
 		window, ok := activeWindow(session)
 		if !ok {
@@ -255,40 +417,79 @@ func (m Model) renderSessionPreviews() string {
 		if !ok {
 			continue
 		}
-		header := lipgloss.NewStyle().
-			Foreground(lipgloss.Color("229")).
-			Bold(true).
-			Render(fmt.Sprintf("%s · %s · %s", session.Name, window.Name, pane.TitleOrCmd()))
+
+		innerWidth := max(20, preview.viewport.Width)
+		headerContent := formatHeader(innerWidth, session, window, pane, session.ID == m.focusedSession)
+		header := lipgloss.NewStyle().Render(headerContent)
 
 		body := preview.viewport.View()
-		card := lipgloss.NewStyle().
-			Margin(0, 1).
-			Padding(0, 1).
-			BorderForeground(lipgloss.Color("62")).
-			BorderStyle(lipgloss.RoundedBorder()).
-			Width(preview.viewport.Width + sidePadding).
-			Render(lipgloss.JoinVertical(lipgloss.Left, header, body))
+		card := cardStyle.Render(lipgloss.JoinVertical(lipgloss.Left, header, body))
+
+		if session.ID == m.focusedSession {
+			card = cardStyle.
+				BorderForeground(lipgloss.Color("212")).
+				Render(lipgloss.JoinVertical(lipgloss.Left, header, body))
+		}
+
 		rendered = append(rendered, card)
+
+		height := lipgloss.Height(card)
+		width := lipgloss.Width(card)
+		closeWidth := len(closeLabel)
+		cardTop := currentY
+		currentY += height
+		closeRight := width - 1 - cardPadding
+		if closeRight < 1 {
+			closeRight = 1
+		}
+		closeLeft := max(1, closeRight-closeWidth+1)
+		bounds := cardBounds{
+			sessionID:  session.ID,
+			top:        cardTop,
+			bottom:     currentY - 1,
+			closeLeft:  closeLeft,
+			closeRight: closeRight,
+		}
+		m.cardLayout = append(m.cardLayout, bounds)
 	}
+
 	return lipgloss.JoinVertical(lipgloss.Left, rendered...)
 }
 
+func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux.Pane, focused bool) string {
+	label := fmt.Sprintf("%s · %s · %s", session.Name, window.Name, pane.TitleOrCmd())
+	labelWidth := lipgloss.Width(label)
+	spaceForLabel := width - len(closeLabel)
+	if spaceForLabel < 1 {
+		spaceForLabel = 1
+	}
+	if labelWidth > spaceForLabel {
+		label = lipgloss.NewStyle().Width(spaceForLabel).MaxWidth(spaceForLabel).Render(label)
+	}
+	padding := spaceForLabel - lipgloss.Width(label)
+	if padding < 0 {
+		padding = 0
+	}
+	header := label + strings.Repeat(" ", padding) + closeLabel
+	if focused {
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("212")).Render(header)
+	}
+	return lipgloss.NewStyle().Foreground(lipgloss.Color("249")).Render(header)
+}
+
 func (m *Model) updatePreviewDimensions(count int) {
-	if count <= 0 || m.width == 0 || m.height == 0 {
+	if count <= 0 || m.width <= 0 || m.height <= 0 {
 		return
 	}
-	usableHeight := m.height - 2 // leave room for status/search
-	if usableHeight < count*minPreviewHeight {
-		usableHeight = count * minPreviewHeight
+	frameHeight := 3
+	internalHeight := (m.height / count) - frameHeight
+	if internalHeight < minPreviewHeight {
+		internalHeight = minPreviewHeight
 	}
-	heightPer := max(minPreviewHeight, usableHeight/count)
-	width := max(10, m.width-2*sidePadding)
+	innerWidth := max(20, m.width-(cardPadding*2+2))
 	for _, preview := range m.previews {
-		preview.viewport.Width = width - 4
-		preview.viewport.Height = heightPer - 3
-		if preview.viewport.Height < 1 {
-			preview.viewport.Height = 1
-		}
+		preview.viewport.Width = innerWidth
+		preview.viewport.Height = internalHeight
 	}
 }
 
@@ -315,8 +516,12 @@ func (m *Model) buildStatusLine() string {
 	if m.searchQuery != "" {
 		filterPart = fmt.Sprintf(" | filter: %s", m.searchQuery)
 	}
-	info := fmt.Sprintf("sessions: %d | last refresh: %s%s", len(m.sessions), last, filterPart)
-	help := "keys: / search · q quit"
+	focusPart := ""
+	if m.focusedSession != "" {
+		focusPart = fmt.Sprintf(" | focused: %s", m.focusedSession)
+	}
+	info := fmt.Sprintf("sessions: %d | last refresh: %s%s%s", len(m.sessions), last, filterPart, focusPart)
+	help := "mouse: click focus, scroll logs, close [x] · keys: / search, H show hidden, q quit"
 	status := lipgloss.JoinHorizontal(lipgloss.Left, style.Render(info), lipgloss.NewStyle().PaddingLeft(2).Render(help))
 	if errPart != "" {
 		status = lipgloss.JoinHorizontal(lipgloss.Left, status, lipgloss.NewStyle().PaddingLeft(2).Render(errPart))
@@ -390,6 +595,20 @@ func activePane(window tmux.Window) (tmux.Pane, bool) {
 	return tmux.Pane{}, false
 }
 
+func (m *Model) isHidden(id string) bool {
+	_, ok := m.hidden[id]
+	return ok
+}
+
+func (m *Model) cardAt(y int) (cardBounds, bool) {
+	for _, card := range m.cardLayout {
+		if y >= card.top && y <= card.bottom {
+			return card, true
+		}
+	}
+	return cardBounds{}, false
+}
+
 func fetchSnapshotCmd(client *tmux.Client) tea.Cmd {
 	return func() tea.Msg {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -414,6 +633,17 @@ func fetchPaneContentCmd(client *tmux.Client, sessionID, paneID string, lines in
 		defer cancel()
 		text, err := client.CapturePane(ctx, paneID, lines)
 		return paneContentMsg{sessionID: sessionID, paneID: paneID, text: text, err: err}
+	}
+}
+
+func sendKeysCmd(client *tmux.Client, paneID string, keys []string) tea.Cmd {
+	return func() tea.Msg {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		if err := client.SendKeys(ctx, paneID, keys...); err != nil {
+			return errMsg{err: err}
+		}
+		return nil
 	}
 }
 

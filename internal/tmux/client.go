@@ -303,3 +303,16 @@ func (c *Client) CapturePane(ctx context.Context, paneID string, lines int) (str
 	}
 	return string(out), nil
 }
+
+// SendKeys sends key sequences to a pane.
+func (c *Client) SendKeys(ctx context.Context, paneID string, keys ...string) error {
+	if paneID == "" {
+		return fmt.Errorf("pane id cannot be empty")
+	}
+	if len(keys) == 0 {
+		return nil
+	}
+	args := append([]string{"send-keys", "-t", paneID}, keys...)
+	cmd := exec.CommandContext(ctx, c.bin, args...)
+	return cmd.Run()
+}

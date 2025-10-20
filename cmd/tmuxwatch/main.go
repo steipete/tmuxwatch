@@ -55,7 +55,7 @@ func main() {
 	}
 
 	model := ui.NewModel(client, *interval)
-	program := tea.NewProgram(model, tea.WithAltScreen())
+	program := tea.NewProgram(model, tea.WithAltScreen(), tea.WithMouseAllMotion())
 
 	if _, err := program.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "tmuxwatch exited with error: %v\n", err)

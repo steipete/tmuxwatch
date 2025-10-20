@@ -20,7 +20,7 @@ Deliver a tmux companion TUI that gives immediate situational awareness across e
 ## Current Architecture
 
 - **`internal/tmux`**: Go wrapper around the tmux binary, providing structured snapshots plus capture-pane support.
-- **`internal/ui`**: Bubble Tea model that renders adaptive session preview cards. Each card captures the active window/pane output, auto-scrolls with new data, and supports real-time filtering via a search overlay.
+- **`internal/ui`**: Bubble Tea model that renders adaptive session preview cards. Cards capture the active window/pane output, auto-scroll with new data, support real-time filtering, forward keystrokes to panes, and provide mouse affordances (focus, scroll, close).
 - **`cmd/tmuxwatch`**: CLI entry point with flags (`--interval`, `--tmux`, `--dump`) and version reporting.
 - **Documentation**: README highlights usage, features, and key bindings; changelog tracks notable updates; MIT license governs distribution.
 
@@ -44,8 +44,8 @@ Deliver a tmux companion TUI that gives immediate situational awareness across e
 ### Phase 2 — UX Enhancements *(in progress)*
 - [ ] Add `--capture-lines` flag and config file to control history depth.
 - [x] Implement search/filter across sessions, windows, and panes.
+- [x] Forward focus and keystrokes from tmuxwatch to live panes; add mouse support for focusing, scrolling, and closing cards.
 - [ ] Surface more status metadata: pane last activity, command exit statuses, alerts.
-- [ ] Add optional mouse support for scrolling/selecting cards.
 - [ ] Introduce optional theme selection aligned with tmux_tui palettes (Dracula, Nord, Catppuccin, etc.).
 - [ ] Provide swap workflows for panes/windows with visual feedback (mark source, confirm target).
 
