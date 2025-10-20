@@ -312,7 +312,7 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			_ = preview.viewport.ScrollUp(scrollStep)
 		}
 	case msg.Button == tea.MouseButtonLeft && msg.Action == tea.MouseActionPress:
-		if msg.Y >= card.top && msg.Y <= card.top+1 && msg.X >= card.closeLeft && msg.X <= card.closeRight {
+		if msg.Y-1 >= card.top && msg.Y-1 <= card.top+1 && msg.X-1 >= card.closeLeft && msg.X-1 <= card.closeRight {
 			m.hidden[card.sessionID] = struct{}{}
 			if m.focusedSession == card.sessionID {
 				m.focusedSession = ""
@@ -516,8 +516,8 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		closeLeft := max(left, closeRight-closeWidth+1)
 		bounds := cardBounds{
 			sessionID:  session.ID,
-			top:        cardTop,
-			bottom:     currentY - 1,
+			top:        cardTop - 1,
+			bottom:     currentY - 2,
 			left:       left,
 			right:      right,
 			closeLeft:  closeLeft,
@@ -703,6 +703,12 @@ func (m *Model) isHidden(id string) bool {
 }
 
 func (m *Model) cardAt(x, y int) (cardBounds, bool) {
+	if x > 0 {
+		x--
+	}
+	if y > 0 {
+		y--
+	}
 	for _, card := range m.cardLayout {
 		if y >= card.top && y <= card.bottom && x >= card.left && x <= card.right {
 			return card, true
