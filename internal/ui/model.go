@@ -55,6 +55,8 @@ type Model struct {
 	lastUpdated time.Time
 	err         error
 	inflight    bool
+
+	cachedStatus string
 }
 
 // NewModel constructs a Model with sane defaults.
@@ -290,11 +292,20 @@ func (m *Model) updatePreviewDimensions(count int) {
 	}
 }
 
-func (m Model) renderStatus() string {
+func (m *Model) renderStatus() string {
+	content := m.buildStatusLine()
+	if content == m.cachedStatus {
+		return m.cachedStatus
+	}
+	m.cachedStatus = content
+	return content
+}
+
+func (m *Model) buildStatusLine() string {
 	style := lipgloss.NewStyle().Foreground(lipgloss.Color("245")).Padding(0, 2)
 	last := "never"
 	if !m.lastUpdated.IsZero() {
-		last = fmt.Sprintf("%s ago", humanizeDuration(time.Since(m.lastUpdated)))
+		last = fmt.Sprintf("%s ago", coarseDuration(time.Since(m.lastUpdated)))
 	}
 	errPart := ""
 	if m.err != nil {
@@ -311,6 +322,19 @@ func (m Model) renderStatus() string {
 		status = lipgloss.JoinHorizontal(lipgloss.Left, status, lipgloss.NewStyle().PaddingLeft(2).Render(errPart))
 	}
 	return status
+}
+
+func coarseDuration(d time.Duration) string {
+	switch {
+	case d < 5*time.Second:
+		return "just now"
+	case d < time.Minute:
+		return fmt.Sprintf("%ds", int(d.Seconds()/5)*5)
+	case d < time.Hour:
+		return fmt.Sprintf("%dm", int(d.Minutes()))
+	default:
+		return fmt.Sprintf("%dh", int(d.Hours()))
+	}
 }
 
 func renderSearchBar(input textinput.Model) string {
@@ -364,19 +388,6 @@ func activePane(window tmux.Window) (tmux.Pane, bool) {
 		return window.Panes[0], true
 	}
 	return tmux.Pane{}, false
-}
-
-func humanizeDuration(d time.Duration) string {
-	switch {
-	case d < time.Second:
-		return "just now"
-	case d < time.Minute:
-		return fmt.Sprintf("%ds", int(d.Seconds()))
-	case d < time.Hour:
-		return fmt.Sprintf("%dm", int(d.Minutes()))
-	default:
-		return fmt.Sprintf("%dh", int(d.Hours()))
-	}
 }
 
 func fetchSnapshotCmd(client *tmux.Client) tea.Cmd {
