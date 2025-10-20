@@ -20,7 +20,7 @@ Deliver a tmux companion TUI that gives immediate situational awareness across e
 ## Current Architecture
 
 - **`internal/tmux`**: Go wrapper around the tmux binary, providing structured snapshots plus capture-pane support.
-- **`internal/ui`**: Bubble Tea model rendering a sidebar of sessions/windows and a tabbed pane viewer with live buffer content, hide/reorder controls, and status footer.
+- **`internal/ui`**: Bubble Tea model that renders adaptive session preview cards. Each card captures the active window/pane output, auto-scrolls with new data, and supports real-time filtering via a search overlay.
 - **`cmd/tmuxwatch`**: CLI entry point with flags (`--interval`, `--tmux`, `--dump`) and version reporting.
 - **Documentation**: README highlights usage, features, and key bindings; changelog tracks notable updates; MIT license governs distribution.
 
@@ -38,17 +38,14 @@ Deliver a tmux companion TUI that gives immediate situational awareness across e
 
 ### Phase 1 — Monitoring Foundations *(done)*
 - [x] Poll tmux sessions/windows/panes.
-- [x] Display a live sidebar with focus switching.
-- [x] Capture pane contents and show them in tabbed view.
-- [x] Allow hiding panes and reordering tabs.
+- [x] Render adaptive session preview cards that auto-scroll with live output.
 - [x] Provide `--dump` JSON snapshot for debugging/automation.
 
 ### Phase 2 — UX Enhancements *(in progress)*
 - [ ] Add `--capture-lines` flag and config file to control history depth.
-- [ ] Implement search/filter across sessions, windows, and panes (inspired by `tmux-tui`).
+- [x] Implement search/filter across sessions, windows, and panes.
 - [ ] Surface more status metadata: pane last activity, command exit statuses, alerts.
-- [ ] Persist hidden/reordered state per session for the current runtime.
-- [ ] Add optional mouse support for tab switching (using Bubble Tea mouse events).
+- [ ] Add optional mouse support for scrolling/selecting cards.
 - [ ] Introduce optional theme selection aligned with tmux_tui palettes (Dracula, Nord, Catppuccin, etc.).
 - [ ] Provide swap workflows for panes/windows with visual feedback (mark source, confirm target).
 
@@ -71,8 +68,8 @@ Deliver a tmux companion TUI that gives immediate situational awareness across e
 - **Permission / Environment**: tmux must be available in `$PATH` and compatible (3.1+).  
   *Mitigation*: detect missing binaries early, provide helpful error messaging, and document requirements prominently.
 
-- **Layout Drift**: Pane reordering in tmuxwatch should not conflict with tmux-native layouts.  
-  *Mitigation*: treat reordering as UI-only; any tmux modifications (splits, swaps) must be explicit commands with confirmations.
+- **Viewport Drift**: Continuous capture-pane updates can fight with user scrolling.  
+  *Mitigation*: keep cards auto-following new output only when the user is at the bottom; preserve manual scroll positions otherwise.
 
 - **Snapshot Accuracy**: Restoring sessions requires faithfully reproducing commands, paths, and layouts.  
   *Mitigation*: when implementing snapshots, serialize layout strings, current commands, cwd, and optionally environment variables.

@@ -8,8 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Initial implementation of the `tmuxwatch` CLI with Bubble Tea interface.
 - tmux session/window/pane polling and auto-refresh.
-- Key bindings for navigation, hiding panes, and manual refresh.
 - Added debug `--dump` mode for printing snapshots and hardened tmux timestamp parsing to accept missing data.
-- Pane tab view now captures live buffer contents via `tmux capture-pane`, supports keyboard tab swapping, and allows reordering with `[` and `]`.
+- Rebuilt the UI around session preview cards that capture active panes, auto-scroll, and share terminal space intelligently.
+- Added live search/filter across sessions, windows, and panes.
 - Added `.golangci.yml`, gofumpt formatting, `Makefile` helpers, and documentation for modern Go lint/format tooling.
 - Integrated Bubble Tea viewport to clamp pane height, enable scrolling (ctrl+d/u, ctrl+f/b, g/G), and prevent oversized buffers from blowing up the layout.
+- Documented tmuxwatch intent and primary use cases in the README.

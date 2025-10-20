@@ -1,37 +1,35 @@
 # tmuxwatch
 
-`tmuxwatch` is a Go-powered terminal user interface that keeps an eye on your tmux server and gives you a live dashboard of sessions, windows, and panes. New activity shows up automatically, panes you do not care about can be hidden with a keystroke, and the layout adapts so you can focus on the streams that matter.
+`tmuxwatch` is a Go-powered terminal user interface that keeps an eye on your tmux server and gives you a live dashboard of sessions, windows, and panes. New activity shows up automatically, fresh sessions pop into view with their recent output, and the layout adapts so you can focus on the streams that matter.
+
+## What It Does
+
+- Polls `tmux list-*` commands and renders a live dashboard so you can glance at everything that is running without detaching or memorising `tmux` incantations.
+- Captures the active pane of every session and displays the latest output in scrollable cards that automatically follow new logs unless you scroll away manually.
+- Adapts the preview grid to however many sessions you have, giving each one a fair slice of terminal real estate.
+- Includes a `--dump` CLI flag so scripts (or curious humans) can print the current tmux state as JSON without launching the TUI.
+- Includes a `--dump` CLI flag so scripts (or curious humans) can print the current tmux state as JSON without launching the TUI.
+
+Use tmuxwatch when you want the situational awareness of a monitoring dashboard but prefer to stay inside a terminal workflow.
 
 ## Why
 
 - Quickly see which tmux sessions are active without memorising `tmux list-…` incantations.
-- Maintain a focused workspace by hiding noisy panes.
+- Maintain a focused workspace by spotting noisy panes instantly and filtering by session, window, or command.
 - Take advantage of Charmbracelet's Bubble Tea stack for a polished, keyboard-driven TUI.
 
 ## Architecture
 
 - **CLI entrypoint** (`cmd/tmuxwatch/main.go`): parses flags, sets up the tmux client, and launches the Bubble Tea program.
 - **Tmux adapter** (`internal/tmux`): thin wrapper around the `tmux` binary that shells out to `list-sessions`, `list-windows`, and `list-panes`, parsing their structured output into Go structs. Periodically polls using a ticker (default 1 s) and emits diff events to the UI.
-- **TUI model** (`internal/ui`): Bubble Tea model with three panes:
-  - left sidebar: list of sessions and windows, navigated with `j/k` or arrow keys;
-  - main view: tab bar of panes for the selected window with live buffer previews captured via `tmux capture-pane`;
-  - status/footer: key hints (navigation, reorder, hide) and last refresh time via Lip Gloss styling.
-- **Hidden pane manager**: tracks pane IDs toggled via `h` (hide) and can be surfaced again with `H` (show all).
+- **TUI model** (`internal/ui`): Bubble Tea model that renders one scrollable viewport per tmux session. Each card shows the active window/pane, auto-refreshes its capture-pane output, and shares the available height evenly across sessions. A search bar filters sessions by title, window name, or pane command in real time.
 
 ## Key Bindings
 
+- `/` or `ctrl+f`: open the search bar to filter sessions/windows/panes
+- `esc`: close the search bar (clears focus) or abort the filter
 - `q` / `ctrl+c`: quit
-- `j` / `down`, `k` / `up`: move selection in the sidebar
-- `enter` / `l`: switch focus from sidebar to panes
-- `tab` / `shift+tab`: toggle focus between sidebar and pane tabs
-- `j` / `down`, `k` / `up`, `left` / `right`: switch between pane tabs
-- `[` / `]`: reorder the focused pane tab
-- `ctrl+d` / `ctrl+u`: half-page scroll down/up inside the pane content
-- `ctrl+f` / `ctrl+b`: page scroll down/up; `g` / `G` to jump to top/bottom
-- `h`: hide the focused pane
-- `H`: reveal all hidden panes
-- `r`: force refresh from tmux
-- `q` / `ctrl+c`: quit
+- Scroll inside a session card with standard viewport bindings (`ctrl+d`, `ctrl+u`, `ctrl+f`, `ctrl+b`, `g`, `G`)
 
 ## Requirements
 
@@ -43,6 +41,8 @@
 ```bash
 go run ./cmd/tmuxwatch
 ```
+
+`go run` compiles the latest sources before executing, so you always see your current edits—no extra build step required.
 
 For a quick inspection of the tmux state without entering the TUI, use the debug dump mode:
 
