@@ -148,8 +148,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, scheduleTick(m.pollInterval)
 	case paneContentMsg:
 		if preview, ok := m.previews[msg.sessionID]; ok && preview.paneID == msg.paneID {
-			content := "Pane capture error: " + msg.err.Error()
-			if msg.err == nil {
+			var content string
+			if msg.err != nil {
+				content = "Pane capture error: " + msg.err.Error()
+			} else {
 				content = strings.TrimRight(msg.text, "\n")
 			}
 			if content != preview.lastContent {
