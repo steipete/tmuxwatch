@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -113,13 +114,8 @@ func (c *Client) Snapshot(ctx context.Context) (Snapshot, error) {
 		}
 	}
 
-	ordered := make([]Session, 0, len(sessions))
-	for _, session := range sessions {
-		ordered = append(ordered, session)
-	}
-
 	return Snapshot{
-		Sessions:  ordered,
+		Sessions:  slices.Clone(sessions),
 		Timestamp: time.Now(),
 	}, nil
 }

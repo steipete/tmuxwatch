@@ -26,6 +26,8 @@
 - `tab` / `shift+tab`: toggle focus between sidebar and pane tabs
 - `j` / `down`, `k` / `up`, `left` / `right`: switch between pane tabs
 - `[` / `]`: reorder the focused pane tab
+- `ctrl+d` / `ctrl+u`: half-page scroll down/up inside the pane content
+- `ctrl+f` / `ctrl+b`: page scroll down/up; `g` / `G` to jump to top/bottom
 - `h`: hide the focused pane
 - `H`: reveal all hidden panes
 - `r`: force refresh from tmux
@@ -46,6 +48,19 @@ For a quick inspection of the tmux state without entering the TUI, use the debug
 
 ```bash
 go run ./cmd/tmuxwatch --dump
+```
+
+### Tooling
+
+Install and use formatter/linter binaries that track the versions pinned in `tools/tools.go`:
+
+```bash
+go install mvdan.cc/gofumpt@v0.9.1
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+
+make fmt   # gofumpt -w .
+make lint  # golangci-lint run
+make check # runs both
 ```
 
 Useful targets that will be added later:

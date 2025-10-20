@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
@@ -43,6 +44,7 @@ type Model struct {
 
 	paneContents map[string]paneContent
 	paneOrder    map[string][]string
+	paneViewport viewport.Model
 
 	lastUpdated time.Time
 	err         error
@@ -101,6 +103,7 @@ func NewModel(client *tmux.Client, poll time.Duration) Model {
 		captureLines: 200,
 		paneContents: make(map[string]paneContent),
 		paneOrder:    make(map[string][]string),
+		paneViewport: viewport.New(0, 0),
 	}
 }
 
@@ -115,6 +118,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
+		m.updatePaneViewportDimensions()
 	case tea.KeyMsg:
 		return m.handleKey(msg)
 	case snapshotMsg:
@@ -125,6 +129,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.syncPaneOrder(msg.snapshot.Sessions)
 		m.rebuildSidebar(msg.snapshot.Sessions)
 		m.ensureSelection()
+		m.refreshPaneViewport(true)
 		cmds := []tea.Cmd{scheduleTick(m.pollInterval)}
 		// Refresh pane content whenever snapshot updates.
 		if m.selectedPaneID != "" {
@@ -146,6 +151,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				text:    msg.text,
 				fetched: time.Now(),
 			}
+		}
+		if msg.paneID == m.selectedPaneID {
+			m.refreshPaneViewport(true)
 		}
 		return m, nil
 	case tickMsg:
@@ -213,8 +221,11 @@ func (m Model) handleSidebarKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.focus = focusPanes
 		}
 	}
-	if prevPane != m.selectedPaneID && m.selectedPaneID != "" {
-		return m, fetchPaneContentCmd(m.client, m.selectedPaneID, m.captureLines)
+	if prevPane != m.selectedPaneID {
+		m.refreshPaneViewport(true)
+		if m.selectedPaneID != "" {
+			return m, fetchPaneContentCmd(m.client, m.selectedPaneID, m.captureLines)
+		}
 	}
 	return m, nil
 }
@@ -227,9 +238,12 @@ func (m Model) handlePaneKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			refreshed := m.visiblePanes()
 			if len(refreshed) > 0 {
 				m.selectedPaneID = refreshed[0].ID
+				m.refreshPaneViewport(true)
 				return m, fetchPaneContentCmd(m.client, m.selectedPaneID, m.captureLines)
 			}
+			m.refreshPaneViewport(true)
 		}
+		m.refreshPaneViewport(false)
 		return m, nil
 	}
 	prevSelection := m.selectedPaneID
@@ -281,10 +295,25 @@ func (m Model) handlePaneKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.reorderSelectedPane(-1)
 	case "]":
 		m.reorderSelectedPane(1)
+	case "ctrl+d":
+		m.paneViewport.HalfPageDown()
+	case "ctrl+u":
+		m.paneViewport.HalfPageUp()
+	case "ctrl+f":
+		m.paneViewport.PageDown()
+	case "ctrl+b":
+		m.paneViewport.PageUp()
+	case "g":
+		m.paneViewport.GotoTop()
+	case "G":
+		m.paneViewport.GotoBottom()
 	}
 	var cmd tea.Cmd
-	if prevSelection != m.selectedPaneID && m.selectedPaneID != "" {
-		cmd = fetchPaneContentCmd(m.client, m.selectedPaneID, m.captureLines)
+	if prevSelection != m.selectedPaneID {
+		m.refreshPaneViewport(true)
+		if m.selectedPaneID != "" {
+			cmd = fetchPaneContentCmd(m.client, m.selectedPaneID, m.captureLines)
+		}
 	}
 	return m, cmd
 }
@@ -538,8 +567,8 @@ func (m Model) View() string {
 func (m Model) renderSidebar() string {
 	width := 30
 	style := lipgloss.NewStyle().Width(width).Padding(0, 1)
-	selectedStyle := style.Copy().Foreground(lipgloss.Color("229")).Background(lipgloss.Color("62"))
-	activeStyle := style.Copy().Foreground(lipgloss.Color("14"))
+	selectedStyle := style.Foreground(lipgloss.Color("229")).Background(lipgloss.Color("62"))
+	activeStyle := style.Foreground(lipgloss.Color("14"))
 	var builder strings.Builder
 	if len(m.sidebar) == 0 {
 		builder.WriteString(selectedStyle.Render("No sessions"))
@@ -558,7 +587,7 @@ func (m Model) renderSidebar() string {
 			if m.focus == focusSidebar {
 				label = selectedStyle.Render(label)
 			} else {
-				label = selectedStyle.Copy().Background(lipgloss.Color("238")).Render(label)
+				label = selectedStyle.Background(lipgloss.Color("238")).Render(label)
 			}
 		}
 		builder.WriteString(label)
@@ -582,8 +611,8 @@ func (m Model) renderPaneView() string {
 	}
 	order := m.paneOrder[window.ID]
 	tabStyle := lipgloss.NewStyle().Padding(0, 1).MarginRight(1)
-	selectedTabStyle := tabStyle.Copy().Foreground(lipgloss.Color("229")).Background(lipgloss.Color("62"))
-	inactiveTabStyle := tabStyle.Copy().Foreground(lipgloss.Color("244"))
+	selectedTabStyle := tabStyle.Foreground(lipgloss.Color("229")).Background(lipgloss.Color("62"))
+	inactiveTabStyle := tabStyle.Foreground(lipgloss.Color("244"))
 
 	paneLookup := make(map[string]tmux.Pane, len(window.Panes))
 	for _, pane := range window.Panes {
@@ -603,7 +632,7 @@ func (m Model) renderPaneView() string {
 		if paneID == m.selectedPaneID && m.focus == focusPanes {
 			tabs = append(tabs, selectedTabStyle.Render(label))
 		} else if paneID == m.selectedPaneID {
-			tabs = append(tabs, selectedTabStyle.Copy().Background(lipgloss.Color("238")).Render(label))
+			tabs = append(tabs, selectedTabStyle.Background(lipgloss.Color("238")).Render(label))
 		} else {
 			tabs = append(tabs, inactiveTabStyle.Render(label))
 		}
@@ -614,18 +643,22 @@ func (m Model) renderPaneView() string {
 	}
 
 	tabRow := lipgloss.JoinHorizontal(lipgloss.Top, tabs...)
+	content := m.paneViewport.View()
+	contentHeight := m.paneViewport.Height + 2
+	if contentHeight < 3 {
+		contentHeight = 3
+	}
 	contentBox := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("62")).
 		Padding(0, 1).
-		Width(width)
-
-	content := m.renderPaneContent()
+		Width(width).
+		Height(contentHeight)
 
 	return style.Render(lipgloss.JoinVertical(lipgloss.Left, tabRow, contentBox.Render(content)))
 }
 
-func (m Model) renderPaneContent() string {
+func (m Model) paneContentString() string {
 	if m.selectedPaneID == "" {
 		return "Select a pane to view its output."
 	}
@@ -646,6 +679,24 @@ func (m Model) renderPaneContent() string {
 	return text
 }
 
+func (m *Model) refreshPaneViewport(reset bool) {
+	m.paneViewport.SetContent(m.paneContentString())
+	if reset {
+		m.paneViewport.GotoTop()
+	}
+}
+
+func (m *Model) updatePaneViewportDimensions() {
+	paneWidth := max(m.width-30, 0)
+	contentWidth := max(paneWidth-4, 0)
+	if contentWidth < 0 {
+		contentWidth = 0
+	}
+	m.paneViewport.Width = contentWidth
+	contentHeight := max(m.height-3, 1)
+	m.paneViewport.Height = contentHeight
+}
+
 func (m Model) renderStatus() string {
 	style := lipgloss.NewStyle().Foreground(lipgloss.Color("245")).Padding(0, 1)
 	last := "never"
@@ -662,7 +713,7 @@ func (m Model) renderStatus() string {
 	if hiddenCount > 0 {
 		hiddenPart = fmt.Sprintf(" | hidden: %d", hiddenCount)
 	}
-	controls := " | keys: j/k←/→ move | [ ] reorder | h hide | H show | tab focus"
+	controls := " | keys: j/k←/→ move | [ ] reorder | ctrl+d/u half scroll | ctrl+f/b page | g/G top/btm | h hide | H show | tab focus"
 	info := fmt.Sprintf("focus: %s | last refresh: %s%s%s", m.focusString(), last, hiddenPart, controls)
 	if errPart != "" {
 		return lipgloss.JoinHorizontal(lipgloss.Top, style.Render(info), lipgloss.NewStyle().PaddingLeft(2).Render(errPart))
@@ -679,13 +730,6 @@ func (m Model) focusString() string {
 	default:
 		return "unknown"
 	}
-}
-
-func humanizeTime(t time.Time) string {
-	if t.IsZero() {
-		return "unknown"
-	}
-	return t.Format(time.RFC3339)
 }
 
 func humanizeDuration(d time.Duration) string {

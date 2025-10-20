@@ -11,3 +11,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Key bindings for navigation, hiding panes, and manual refresh.
 - Added debug `--dump` mode for printing snapshots and hardened tmux timestamp parsing to accept missing data.
 - Pane tab view now captures live buffer contents via `tmux capture-pane`, supports keyboard tab swapping, and allows reordering with `[` and `]`.
+- Added `.golangci.yml`, gofumpt formatting, `Makefile` helpers, and documentation for modern Go lint/format tooling.
+- Integrated Bubble Tea viewport to clamp pane height, enable scrolling (ctrl+d/u, ctrl+f/b, g/G), and prevent oversized buffers from blowing up the layout.
