@@ -21,6 +21,7 @@ Deliver a tmux companion TUI that gives immediate situational awareness across e
 
 - **`internal/tmux`**: Go wrapper around the tmux binary, providing structured snapshots plus capture-pane support.
 - **`internal/ui`**: Bubble Tea model that renders adaptive session preview cards. Cards capture the active window/pane output, auto-scroll with new data, expose session metadata (last activity, exit status), forward keystrokes to panes, pulse briefly when output changes, and provide mouse affordances (focus, scroll, close).
+ - **`internal/ui`**: Bubble Tea model that renders adaptive session preview cards. Cards capture the active window/pane output, auto-scroll with new data, expose session metadata (last activity, exit status), forward keystrokes to panes (including double-press ctrl+c quit), pulse briefly when output changes, and provide mouse affordances (focus, scroll, close).
 - **`cmd/tmuxwatch`**: CLI entry point with flags (`--interval`, `--tmux`, `--dump`) and version reporting.
 - **Documentation**: README highlights usage, features, and key bindings; changelog tracks notable updates; MIT license governs distribution.
 

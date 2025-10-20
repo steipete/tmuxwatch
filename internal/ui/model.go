@@ -21,6 +21,7 @@ const (
 	closeLabel          = "[x]"
 	scrollStep          = 3
 	pulseDuration       = 1500 * time.Millisecond
+	quitChordWindow     = 600 * time.Millisecond
 	borderColorBase     = "62"
 	borderColorFocus    = "212"
 	borderColorPulse    = "213"
@@ -88,6 +89,7 @@ type Model struct {
 	inflight    bool
 
 	cachedStatus string
+	lastCtrlC    time.Time
 }
 
 // NewModel builds a Model with defaults.
@@ -176,12 +178,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *Model) handleGlobalKey(msg tea.KeyMsg) (bool, tea.Cmd) {
 	switch msg.String() {
 	case "/", "ctrl+f":
+		m.resetCtrlC()
 		m.searching = true
 		m.searchInput.SetValue(m.searchQuery)
 		m.searchInput.CursorEnd()
 		return true, nil
 	case "esc":
 		if m.searchQuery != "" {
+			m.resetCtrlC()
 			m.searchQuery = ""
 			m.updatePreviewDimensions(m.filteredSessionCount())
 			return true, nil
@@ -189,11 +193,13 @@ func (m *Model) handleGlobalKey(msg tea.KeyMsg) (bool, tea.Cmd) {
 		return false, nil
 	case "H":
 		if len(m.hidden) > 0 {
+			m.resetCtrlC()
 			m.hidden = make(map[string]struct{})
 			m.updatePreviewDimensions(m.filteredSessionCount())
 		}
 		return true, nil
-	case "q", "ctrl+c":
+	case "q":
+		m.resetCtrlC()
 		return true, tea.Quit
 	}
 	return false, nil
@@ -207,38 +213,61 @@ func (m *Model) handleFocusedKey(msg tea.KeyMsg) (bool, tea.Cmd) {
 	if !ok {
 		return false, nil
 	}
+	pane, paneOK := m.paneFor(m.focusedSession)
 	switch msg.String() {
 	case "up":
-		_ = preview.viewport.ScrollUp(1)
+		m.resetCtrlC()
+		preview.viewport.ScrollUp(1)
 		return true, nil
 	case "down":
-		_ = preview.viewport.ScrollDown(1)
+		m.resetCtrlC()
+		preview.viewport.ScrollDown(1)
 		return true, nil
 	case "pgup":
+		m.resetCtrlC()
 		preview.viewport.PageUp()
 		return true, nil
 	case "pgdown":
+		m.resetCtrlC()
 		preview.viewport.PageDown()
 		return true, nil
 	case "ctrl+u":
-		_ = preview.viewport.ScrollUp(scrollStep)
+		m.resetCtrlC()
+		preview.viewport.ScrollUp(scrollStep)
 		return true, nil
 	case "ctrl+d":
-		_ = preview.viewport.ScrollDown(scrollStep)
+		m.resetCtrlC()
+		preview.viewport.ScrollDown(scrollStep)
 		return true, nil
 	case "g":
+		m.resetCtrlC()
 		preview.viewport.GotoTop()
 		return true, nil
 	case "G":
+		m.resetCtrlC()
 		preview.viewport.GotoBottom()
 		return true, nil
+	case "ctrl+c":
+		now := time.Now()
+		if !paneOK || pane.Dead || preview.paneID == "" {
+			return true, tea.Quit
+		}
+		cmd := sendKeysCmd(m.client, preview.paneID, "C-c")
+		if !m.lastCtrlC.IsZero() && now.Sub(m.lastCtrlC) < quitChordWindow {
+			m.resetCtrlC()
+			return true, tea.Batch(cmd, tea.Quit)
+		}
+		m.lastCtrlC = now
+		return true, cmd
 	}
 
 	keys, ok := tmuxKeysFrom(msg)
 	if !ok || preview.paneID == "" {
+		m.resetCtrlC()
 		return false, nil
 	}
-	return true, sendKeysCmd(m.client, preview.paneID, keys)
+	m.resetCtrlC()
+	return true, sendKeysCmd(m.client, preview.paneID, keys...)
 }
 
 func tmuxKeysFrom(msg tea.KeyMsg) ([]string, bool) {
@@ -289,10 +318,12 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 				m.focusedSession = ""
 			}
 			delete(m.previews, card.sessionID)
+			m.resetCtrlC()
 			m.updatePreviewDimensions(m.filteredSessionCount())
 			return m, nil
 		}
 		m.focusedSession = card.sessionID
+		m.resetCtrlC()
 		if preview != nil {
 			preview.viewport.GotoBottom()
 		}
@@ -680,6 +711,23 @@ func (m *Model) cardAt(x, y int) (cardBounds, bool) {
 	return cardBounds{}, false
 }
 
+func (m *Model) resetCtrlC() {
+	m.lastCtrlC = time.Time{}
+}
+
+func (m *Model) paneFor(sessionID string) (tmux.Pane, bool) {
+	for _, session := range m.sessions {
+		if session.ID == sessionID {
+			window, ok := activeWindow(session)
+			if !ok {
+				return tmux.Pane{}, false
+			}
+			return activePane(window)
+		}
+	}
+	return tmux.Pane{}, false
+}
+
 func fetchSnapshotCmd(client *tmux.Client) tea.Cmd {
 	return func() tea.Msg {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -707,7 +755,7 @@ func fetchPaneContentCmd(client *tmux.Client, sessionID, paneID string, lines in
 	}
 }
 
-func sendKeysCmd(client *tmux.Client, paneID string, keys []string) tea.Cmd {
+func sendKeysCmd(client *tmux.Client, paneID string, keys ...string) tea.Cmd {
 	return func() tea.Msg {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()

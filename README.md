@@ -34,6 +34,7 @@ Use tmuxwatch when you want the situational awareness of a monitoring dashboard 
 - `H`: show all hidden sessions again
 - `up` / `down`, `pgup` / `pgdown`, `ctrl+u` / `ctrl+d`, `g` / `G`: scroll the focused card
 - Printable keys (when a card is focused): forwarded to the tmux pane via `tmux send-keys`
+- `ctrl+c`: forwarded to the focused pane; press twice quickly to exit tmuxwatch (single press exits if no pane is focused/alive)
 - `q` / `ctrl+c`: quit
 
 ### Mouse
