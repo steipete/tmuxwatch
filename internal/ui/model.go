@@ -451,16 +451,20 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		return ""
 	}
 
-	cols := m.computeColumns(len(sessions))
+	cols := 1
+	if len(sessions) > 1 && m.width >= 70 {
+		cols = 2
+	}
 	baseStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(borderColorBase)).
 		Padding(0, cardPadding)
 
 	innerWidth := max(20, (m.width/cols)-(cardPadding*2+2))
-	innerHeight := max(minPreviewHeight, (m.height-offset-3)/max(1, (len(sessions)+cols-1)/cols))
+	rows := (len(sessions) + cols - 1) / cols
+	innerHeight := max(minPreviewHeight, (m.height-offset-3)/max(1, rows))
 
-	rows := make([][]string, 0)
+	grid := make([][]string, 0)
 	now := time.Now()
 
 	for idx, session := range sessions {
@@ -501,15 +505,15 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		card := borderStyle.Render(lipgloss.JoinVertical(lipgloss.Left, header, body))
 
 		rowIdx := idx / cols
-		if len(rows) <= rowIdx {
-			rows = append(rows, []string{})
+		if len(grid) <= rowIdx {
+			grid = append(grid, []string{})
 		}
-		rows[rowIdx] = append(rows[rowIdx], card)
+		grid[rowIdx] = append(grid[rowIdx], card)
 
 		width := lipgloss.Width(card)
 		closeWidth := len(closeLabel)
 		colIndex := idx % cols
-		left := colIndex * (m.width / cols)
+		left := colIndex * innerWidth
 		right := left + width - 1
 		closeRight := right - 1 - cardPadding
 		if closeRight > right {
@@ -530,7 +534,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 	}
 
 	var rendered []string
-	for _, row := range rows {
+	for _, row := range grid {
 		if len(row) == 0 {
 			continue
 		}
@@ -789,27 +793,6 @@ func sendKeysCmd(client *tmux.Client, paneID string, keys ...string) tea.Cmd {
 
 func max(a, b int) int {
 	if a > b {
-		return a
-	}
-	return b
-}
-
-func (m *Model) computeColumns(count int) int {
-	cols := 1
-	if count >= 4 && m.width >= 80 {
-		cols = 2
-	}
-	if count >= 6 && m.width >= 120 {
-		cols = min(3, count)
-	}
-	if count >= 9 && m.width >= 160 {
-		cols = min(4, count)
-	}
-	return cols
-}
-
-func min(a, b int) int {
-	if a < b {
 		return a
 	}
 	return b
