@@ -57,6 +57,8 @@ type cardBounds struct {
 	sessionID  string
 	top        int
 	bottom     int
+	left       int
+	right      int
 	closeLeft  int
 	closeRight int
 }
@@ -266,7 +268,7 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	if len(m.cardLayout) == 0 {
 		return m, nil
 	}
-	card, ok := m.cardAt(msg.Y)
+	card, ok := m.cardAt(msg.X, msg.Y)
 	if !ok {
 		return m, nil
 	}
@@ -281,7 +283,7 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			_ = preview.viewport.ScrollUp(scrollStep)
 		}
 	case msg.Button == tea.MouseButtonLeft && msg.Action == tea.MouseActionPress:
-		if msg.Y == card.top+1 && msg.X >= card.closeLeft && msg.X <= card.closeRight {
+		if msg.Y >= card.top && msg.Y <= card.top+1 && msg.X >= card.closeLeft && msg.X <= card.closeRight {
 			m.hidden[card.sessionID] = struct{}{}
 			if m.focusedSession == card.sessionID {
 				m.focusedSession = ""
@@ -416,11 +418,12 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		return ""
 	}
 
-	cardStyle := lipgloss.NewStyle().
+	baseStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(borderColorBase)).
 		Padding(0, cardPadding)
 
+	cardLeft := 0
 	var rendered []string
 	currentY := offset + 1
 	now := time.Now()
@@ -447,7 +450,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 
 		body := preview.viewport.View()
 
-		borderStyle := cardStyle
+		borderStyle := baseStyle
 		switch {
 		case pane.Dead && pane.DeadStatus != 0:
 			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorExitFail))
@@ -468,15 +471,22 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		closeWidth := len(closeLabel)
 		cardTop := currentY
 		currentY += height
-		closeRight := width - 1 - cardPadding
-		if closeRight < 1 {
-			closeRight = 1
+		left := cardLeft
+		right := left + width - 1
+		closeRight := right - 1 - cardPadding
+		if closeRight > right {
+			closeRight = right
 		}
-		closeLeft := max(1, closeRight-closeWidth+1)
+		if closeRight < left {
+			closeRight = left
+		}
+		closeLeft := max(left, closeRight-closeWidth+1)
 		bounds := cardBounds{
 			sessionID:  session.ID,
 			top:        cardTop,
 			bottom:     currentY - 1,
+			left:       left,
+			right:      right,
 			closeLeft:  closeLeft,
 			closeRight: closeRight,
 		}
@@ -650,9 +660,9 @@ func (m *Model) isHidden(id string) bool {
 	return ok
 }
 
-func (m *Model) cardAt(y int) (cardBounds, bool) {
+func (m *Model) cardAt(x, y int) (cardBounds, bool) {
 	for _, card := range m.cardLayout {
-		if y >= card.top && y <= card.bottom {
+		if y >= card.top && y <= card.bottom && x >= card.left && x <= card.right {
 			return card, true
 		}
 	}
