@@ -177,5 +177,6 @@ func paletteStyle() lipgloss.Style {
 		MarginTop(1).
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("62")).
+		Background(lipgloss.Color("235")).
 		Padding(1, 2)
 }

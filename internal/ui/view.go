@@ -42,16 +42,10 @@ func (m *Model) View() string {
 	palette := m.renderCommandPalette()
 	width := max(m.width, lipgloss.Width(view))
 	height := max(m.height, countLines(view))
+	paletteWidth := lipgloss.Width(palette)
+	paletteHeight := countLines(palette)
+	offsetX := max((width-paletteWidth)/2, 0)
+	offsetY := max((height-paletteHeight)/2, 0)
 
-	overlay := lipgloss.Place(
-		width,
-		height,
-		lipgloss.Center,
-		lipgloss.Center,
-		palette,
-		lipgloss.WithWhitespaceChars(" "),
-		lipgloss.WithWhitespaceBackground(lipgloss.Color("235")),
-	)
-
-	return overlayView(view, overlay, width, height)
+	return overlayView(view, palette, width, height, offsetX, offsetY)
 }

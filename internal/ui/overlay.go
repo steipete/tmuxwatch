@@ -8,46 +8,64 @@ import (
 	"github.com/charmbracelet/x/cellbuf"
 )
 
-func overlayView(base, overlay string, width, height int) string {
+func overlayView(base, overlay string, width, height, offsetX, offsetY int) string {
+	baseWidth := lipgloss.Width(base)
+	baseHeight := countLines(base)
+
 	if width <= 0 {
-		width = max(lipgloss.Width(base), lipgloss.Width(overlay))
+		width = baseWidth
 	}
 	if width <= 0 {
-		width = lipgloss.Width(base)
+		width = lipgloss.Width(overlay)
 	}
 	if width <= 0 {
 		width = 1
 	}
 
 	if height <= 0 {
-		height = max(countLines(base), countLines(overlay))
+		height = baseHeight
+	}
+	if height <= 0 {
+		height = countLines(overlay)
 	}
 	if height <= 0 {
 		height = 1
 	}
 
-	rect := image.Rect(0, 0, width, height)
-
 	baseBuf := cellbuf.NewBuffer(width, height)
-	cellbuf.SetContentRect(baseBuf, base, rect)
+	cellbuf.SetContentRect(baseBuf, base, image.Rect(0, 0, width, height))
 
-	overlayBuf := cellbuf.NewBuffer(width, height)
-	cellbuf.SetContentRect(overlayBuf, overlay, rect)
+	if overlay != "" {
+		overlayWidth := lipgloss.Width(overlay)
+		overlayHeight := countLines(overlay)
+		if overlayWidth > width {
+			overlayWidth = width
+		}
+		if overlayHeight > height {
+			overlayHeight = height
+		}
 
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
-			cell := overlayBuf.Cell(x, y)
-			if cell == nil || cell.Empty() || cell.Clear() {
-				continue
+		oBuf := cellbuf.NewBuffer(overlayWidth, overlayHeight)
+		cellbuf.SetContentRect(oBuf, overlay, image.Rect(0, 0, overlayWidth, overlayHeight))
+
+		for y := 0; y < overlayHeight; y++ {
+			for x := 0; x < overlayWidth; x++ {
+				cell := oBuf.Cell(x, y)
+				if cell == nil || cell.Empty() {
+					continue
+				}
+				destX := offsetX + x
+				destY := offsetY + y
+				if destX < 0 || destX >= width || destY < 0 || destY >= height {
+					continue
+				}
+				baseBuf.SetCell(destX, destY, cell.Clone())
 			}
-			// Clone before writing so we don't mutate the overlay buffer.
-			baseBuf.SetCell(x, y, cell.Clone())
 		}
 	}
 
 	out := cellbuf.Render(baseBuf)
-	out = strings.ReplaceAll(out, "\r\n", "\n")
-	return out
+	return strings.ReplaceAll(out, "\r\n", "\n")
 }
 
 func countLines(str string) int {
