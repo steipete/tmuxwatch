@@ -1,7 +1,10 @@
 // File stale.go encapsulates logic for detecting inactive or dead sessions.
 package ui
 
-import "time"
+import (
+	"sort"
+	"time"
+)
 
 func (m *Model) updateStaleSessions() {
 	for k := range m.stale {
@@ -38,5 +41,18 @@ func (m *Model) staleSessionNames() []string {
 			names = append(names, session.Name)
 		}
 	}
+	sort.Strings(names)
 	return names
+}
+
+func (m *Model) staleSessionIDs() []string {
+	if len(m.stale) == 0 {
+		return nil
+	}
+	ids := make([]string, 0, len(m.stale))
+	for id := range m.stale {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	return ids
 }

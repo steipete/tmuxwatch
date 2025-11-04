@@ -49,10 +49,10 @@ type (
 		vars      map[string]string
 		err       error
 	}
-	killSessionMsg struct{ sessionID string }
-	errMsg         struct{ err error }
-	tickMsg        struct{}
-	searchBlurMsg  struct{}
+	killSessionsMsg struct{ ids []string }
+	errMsg          struct{ err error }
+	tickMsg         struct{}
+	searchBlurMsg   struct{}
 )
 
 type sessionPreview struct {
@@ -73,6 +73,12 @@ type cardBounds struct {
 	closeRight int
 }
 
+type commandItem struct {
+	label   string
+	enabled bool
+	run     func(*Model) tea.Cmd
+}
+
 // Model owns the Bubble Tea state machine and cached tmux snapshot data.
 type Model struct {
 	client       *tmux.Client
@@ -86,6 +92,10 @@ type Model struct {
 	previews map[string]*sessionPreview
 	hidden   map[string]struct{}
 	stale    map[string]struct{}
+
+	paletteOpen     bool
+	paletteIndex    int
+	paletteCommands []commandItem
 
 	searchInput textinput.Model
 	searching   bool

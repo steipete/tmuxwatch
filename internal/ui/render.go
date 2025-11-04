@@ -43,6 +43,9 @@ func (m *Model) View() string {
 	}
 
 	sections = append(sections, m.renderStatus())
+	if m.paletteOpen {
+		sections = append(sections, m.renderCommandPalette())
+	}
 	return lipgloss.JoinVertical(lipgloss.Left, sections...)
 }
 
@@ -248,7 +251,7 @@ func (m *Model) buildStatusLine() string {
 		lipgloss.NewStyle().
 			Foreground(lipgloss.Color("245")).
 			Padding(1, 2).
-			Render("mouse: click focus, scroll logs, close [x] · keys: / search, H show hidden, X clean stale, q quit"),
+			Render("mouse: click focus, scroll logs, close [x] · keys: / search, H show hidden, X kill stale, ctrl+X clean all, ctrl+P palette, q quit"),
 	}
 
 	if stale := m.staleSessionNames(); len(stale) > 0 {

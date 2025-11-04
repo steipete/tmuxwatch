@@ -20,6 +20,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		m.updatePreviewDimensions(m.filteredSessionCount())
 	case tea.KeyMsg:
+		if m.paletteOpen {
+			return m.handlePaletteKey(msg)
+		}
 		if m.searching {
 			return m.handleSearchKey(msg)
 		}
@@ -67,14 +70,19 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				preview.vars = msg.vars
 			}
 		}
-	case killSessionMsg:
-		m.inflight = true
-		if m.focusedSession == msg.sessionID {
-			m.focusedSession = ""
+	case killSessionsMsg:
+		if len(msg.ids) == 0 {
+			return m, nil
 		}
-		delete(m.previews, msg.sessionID)
-		delete(m.hidden, msg.sessionID)
-		delete(m.stale, msg.sessionID)
+		for _, id := range msg.ids {
+			if m.focusedSession == id {
+				m.focusedSession = ""
+			}
+			delete(m.previews, id)
+			delete(m.hidden, id)
+			delete(m.stale, id)
+		}
+		m.inflight = true
 		return m, fetchSnapshotCmd(m.client)
 	case tickMsg:
 		if m.inflight {

@@ -28,6 +28,13 @@ func (m *Model) handleGlobalKey(msg tea.KeyMsg) (bool, tea.Cmd) {
 			return true, nil
 		}
 		return false, nil
+	case "ctrl+p":
+		if m.paletteOpen {
+			m.closePalette()
+		} else {
+			m.openCommandPalette()
+		}
+		return true, nil
 	case "H":
 		if len(m.hidden) > 0 {
 			m.resetCtrlC()
@@ -35,6 +42,13 @@ func (m *Model) handleGlobalKey(msg tea.KeyMsg) (bool, tea.Cmd) {
 			m.updatePreviewDimensions(m.filteredSessionCount())
 		}
 		return true, nil
+	case "ctrl+x":
+		ids := m.staleSessionIDs()
+		if len(ids) == 0 {
+			return true, nil
+		}
+		m.resetCtrlC()
+		return true, killSessionsCmd(m.client, ids)
 	case "q":
 		m.resetCtrlC()
 		return true, tea.Quit
@@ -46,7 +60,7 @@ func (m *Model) handleGlobalKey(msg tea.KeyMsg) (bool, tea.Cmd) {
 			return true, nil
 		}
 		m.resetCtrlC()
-		return true, killSessionCmd(m.client, m.focusedSession)
+		return true, killSessionsCmd(m.client, []string{m.focusedSession})
 	}
 	return false, nil
 }
