@@ -64,15 +64,15 @@ type sessionPreview struct {
 }
 
 type cardBounds struct {
-    sessionID  string
-    top        int
-    height     int
-    left       int
-    width      int
-    closeLeft  int
-    closeRight int
-    marginTop  int
-    marginBottom int
+	sessionID    string
+	top          int
+	height       int
+	left         int
+	width        int
+	closeLeft    int
+	closeRight   int
+	marginTop    int
+	marginBottom int
 }
 
 type commandItem struct {
