@@ -25,7 +25,6 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		cols = 2
 	}
 	baseStyle := lipgloss.NewStyle().
-		MarginTop(1).
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(borderColorBase)).
 		Padding(0, cardPadding)
