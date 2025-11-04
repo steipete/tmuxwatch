@@ -1,14 +1,14 @@
 package ui
 
 import (
-    "fmt"
-    "strings"
-    "time"
+	"fmt"
+	"strings"
+	"time"
 
-    "github.com/charmbracelet/lipgloss"
-    "github.com/charmbracelet/x/ansi"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
 
-    "github.com/steipete/tmuxwatch/internal/tmux"
+	"github.com/steipete/tmuxwatch/internal/tmux"
 )
 
 // renderSessionPreviews lays out each visible session card with consistent
@@ -25,6 +25,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		cols = 2
 	}
 	baseStyle := lipgloss.NewStyle().
+		MarginTop(1).
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(borderColorBase)).
 		Padding(0, cardPadding)
