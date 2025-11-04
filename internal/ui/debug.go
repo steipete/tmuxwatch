@@ -23,20 +23,21 @@ func (m *Model) logMouseEvent(msg tea.MouseMsg, card cardBounds, ok bool) {
 }
 
 func (m *Model) logCardLayout() {
+	if !m.traceMouse {
+		return
+	}
 	fmt.Fprintln(os.Stderr, "[debug] card layout:")
 	for i, card := range m.cardLayout {
 		x0 := card.left
 		x1 := card.left + card.width - 1
 		y0 := card.top
 		y1 := card.top + card.height - 1
-		closeTop := y0
-		closeBottom := min(y1, y0+1)
 		fmt.Fprintf(os.Stderr, "  [%d] session=%s bounds=[x=%d..%d y=%d..%d] close=[x=%d..%d y=%d..%d]\n",
 			i,
 			card.sessionID,
 			x0, x1,
 			y0, y1,
 			card.closeLeft, card.closeRight,
-			closeTop, closeBottom)
+			card.closeTop, card.closeBottom)
 	}
 }

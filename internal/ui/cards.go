@@ -1,13 +1,14 @@
 package ui
 
 import (
-	"fmt"
-	"strings"
-	"time"
+    "fmt"
+    "strings"
+    "time"
 
-	"github.com/charmbracelet/lipgloss"
+    "github.com/charmbracelet/lipgloss"
+    "github.com/charmbracelet/x/ansi"
 
-	"github.com/steipete/tmuxwatch/internal/tmux"
+    "github.com/steipete/tmuxwatch/internal/tmux"
 )
 
 // renderSessionPreviews lays out each visible session card with consistent
@@ -98,23 +99,36 @@ func (m *Model) renderSessionPreviews(offset int) string {
 			effectiveHeight = height
 		}
 
-		closeWidth := len(closeLabel)
 		colIndex := idx % cols
 		left := colIndex * cellWidth
 		cardLeft := left + marginLeft
 		cardWidth := effectiveWidth
 		cardHeight := effectiveHeight
-		closeRight := cardLeft + cardWidth - 1 - cardPadding
-		if closeRight < cardLeft {
-			closeRight = cardLeft
+
+		closeLeft := cardLeft
+		closeRight := cardLeft
+		closeLine := 1
+
+		lines := strings.Split(card, "\n")
+		for lineIndex, line := range lines {
+			idx := strings.Index(line, closeLabel)
+			if idx < 0 {
+				continue
+			}
+			prefixWidth := ansi.StringWidth(line[:idx])
+			closeLeft = cardLeft + prefixWidth
+			closeRight = closeLeft + lipgloss.Width(closeLabel) - 1
+			closeLine = lineIndex
+			break
 		}
-		closeLeft := max(cardLeft, closeRight-closeWidth+1)
+
 		bounds := cardBounds{
 			sessionID:    session.ID,
 			left:         cardLeft,
 			width:        cardWidth,
 			closeLeft:    closeLeft,
 			closeRight:   closeRight,
+			closeLine:    closeLine,
 			height:       cardHeight,
 			marginTop:    marginTop,
 			marginBottom: marginBottom,
@@ -151,6 +165,8 @@ func (m *Model) renderSessionPreviews(offset int) string {
 					card.height = rowHeight
 				}
 			}
+			card.closeTop = card.top + card.closeLine
+			card.closeBottom = card.closeTop
 			layoutIdx++
 		}
 		rendered = append(rendered, rowStr)

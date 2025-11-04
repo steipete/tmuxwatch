@@ -177,7 +177,7 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			_ = preview.viewport.ScrollUp(scrollStep)
 		}
 	case msg.Button == tea.MouseButtonLeft && msg.Action == tea.MouseActionPress:
-		if msg.Y >= card.top && msg.Y <= card.top+1 && msg.X >= card.closeLeft && msg.X <= card.closeRight {
+		if msg.Y >= card.closeTop && msg.Y <= card.closeBottom && msg.X >= card.closeLeft && msg.X <= card.closeRight {
 			m.hidden[card.sessionID] = struct{}{}
 			if m.focusedSession == card.sessionID {
 				m.focusedSession = ""
