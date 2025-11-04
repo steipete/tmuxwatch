@@ -1,3 +1,4 @@
+// File main.go wires command-line flags and the Bubble Tea program together.
 package main
 
 import (
@@ -16,6 +17,7 @@ import (
 
 var version = "dev"
 
+// main configures the tmux client, handles flag modes, and launches Bubble Tea.
 func main() {
 	var (
 		interval = flag.Duration("interval", time.Second, "tmux poll interval")
