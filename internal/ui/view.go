@@ -11,8 +11,8 @@ func (m *Model) View() string {
 
 	var sections []string
 	padding := lipgloss.NewStyle().Width(max(m.width, 1)).Render(" ")
-	sections = append(sections, padding, padding)
-	offset := 2
+	sections = append(sections, padding, padding, padding, padding)
+	offset := 4
 
 	title := renderTitleBar(m)
 	sections = append(sections, title)
