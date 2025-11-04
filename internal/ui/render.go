@@ -129,10 +129,10 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		card := borderStyle.Render(lipgloss.JoinVertical(lipgloss.Left, header, body))
 
 		rowIdx := idx / cols
-		if len(grid) <= rowIdx {
-			grid = append(grid, []string{})
-		}
-		grid[rowIdx] = append(grid[rowIdx], card)
+        for len(grid) <= rowIdx {
+            grid = append(grid, []string{})
+        }
+        grid[rowIdx] = append(grid[rowIdx], card)
 
 		width := lipgloss.Width(card)
 		height := lipgloss.Height(card)
