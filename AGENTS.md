@@ -36,3 +36,4 @@
 - Never launch the TUI directly from the shell; wrap checks in tmux (`tmux new-session ... go run ./cmd/tmuxwatch`).
 - Prefer `gofumpt`+`golangci-lint` for consistency; avoid ad-hoc formatters.
 - When scripting tmux interactions for tests, remember to clean up (`tmux kill-session`) to leave developer sessions untouched.
+- Treat `docs/idiomatic-go.md` as required reading before contributing; follow its 2025 idioms for style, tooling, and testing norms.
