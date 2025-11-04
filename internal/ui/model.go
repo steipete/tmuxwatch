@@ -67,6 +67,7 @@ type cardBounds struct {
 	right      int
 	closeLeft  int
 	closeRight int
+	height     int
 }
 
 // Model owns the Bubble Tea state machine and cached tmux snapshot data.

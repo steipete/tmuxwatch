@@ -116,6 +116,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		grid[rowIdx] = append(grid[rowIdx], card)
 
 		width := lipgloss.Width(card)
+		height := lipgloss.Height(card)
 		closeWidth := len(closeLabel)
 		colIndex := idx % cols
 		left := colIndex * cellWidth
@@ -138,6 +139,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 			right:      right,
 			closeLeft:  closeLeft,
 			closeRight: closeRight,
+			height:     height,
 		}
 		m.cardLayout = append(m.cardLayout, bounds)
 	}
@@ -165,7 +167,11 @@ func (m *Model) renderSessionPreviews(offset int) string {
 			}
 			card := &m.cardLayout[layoutIdx]
 			card.top = rowTop
-			card.bottom = rowTop + rowHeight - 1
+			h := card.height
+			if h <= 0 {
+				h = rowHeight
+			}
+			card.bottom = rowTop + h - 1
 			layoutIdx++
 		}
 		rendered = append(rendered, rowStr)
