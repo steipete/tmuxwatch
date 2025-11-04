@@ -10,9 +10,13 @@ func (m *Model) View() string {
 	}
 
 	var sections []string
+	padding := lipgloss.NewStyle().Width(max(m.width, 1)).Render(" ")
+	sections = append(sections, padding, padding)
+	offset := 2
+
 	title := renderTitleBar(m)
 	sections = append(sections, title)
-	offset := lipgloss.Height(title)
+	offset += lipgloss.Height(title)
 	if m.searching {
 		search := renderSearchBar(m.searchInput)
 		sections = append(sections, search)
@@ -23,7 +27,7 @@ func (m *Model) View() string {
 		offset += lipgloss.Height(summary)
 	}
 
-	sections = append(sections, lipgloss.NewStyle().Width(max(m.width, 1)).Render(" "))
+	sections = append(sections, padding)
 	offset++
 
 	previews := m.renderSessionPreviews(offset)
