@@ -12,6 +12,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	zone "github.com/lrstanley/bubblezone"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
 	"github.com/steipete/tmuxwatch/internal/ui"
@@ -21,6 +22,8 @@ var version = "dev"
 
 // main configures the tmux client, handles flag modes, and launches Bubble Tea.
 func main() {
+	zone.NewGlobal()
+
 	var (
 		interval   = flag.Duration("interval", time.Second, "tmux poll interval")
 		tmuxBin    = flag.String("tmux", "", "path to tmux binary (defaults to PATH lookup)")

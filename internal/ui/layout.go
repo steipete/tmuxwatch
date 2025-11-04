@@ -4,6 +4,8 @@ package ui
 
 import (
 	"github.com/charmbracelet/bubbles/viewport"
+	tea "github.com/charmbracelet/bubbletea"
+	zone "github.com/lrstanley/bubblezone"
 )
 
 type innerDimension struct {
@@ -43,10 +45,10 @@ func (m *Model) updatePreviewDimensions(count int) {
 	}
 }
 
-// cardAt resolves the card located at the given terminal coordinates.
-func (m *Model) cardAt(x, y int) (cardBounds, bool) {
+// cardAt resolves the card located at the given mouse coordinates.
+func (m *Model) cardAt(msg tea.MouseMsg) (cardBounds, bool) {
 	for _, card := range m.cardLayout {
-		if y >= card.top && y < card.top+card.height && x >= card.left && x < card.left+card.width {
+		if info := zone.Get(card.zoneID); info != nil && info.InBounds(msg) {
 			return card, true
 		}
 	}

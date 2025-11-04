@@ -7,6 +7,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	zone "github.com/lrstanley/bubblezone"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
@@ -158,15 +159,15 @@ func tmuxKeysFrom(msg tea.KeyMsg) ([]string, bool) {
 
 // handleMouse wires up focus toggles, pane hiding, and scroll gestures.
 func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
-	if len(m.cardLayout) == 0 {
-		return m, nil
-	}
-	card, ok := m.cardAt(msg.X, msg.Y)
-	m.logMouseEvent(msg, card, ok)
-	if !ok {
-		return m, nil
-	}
-	preview := m.previews[card.sessionID]
+    if len(m.cardLayout) == 0 {
+        return m, nil
+    }
+    card, ok := m.cardAt(msg)
+    m.logMouseEvent(msg, card, ok)
+    if !ok {
+        return m, nil
+    }
+    preview := m.previews[card.sessionID]
 	switch {
 	case msg.Button == tea.MouseButtonWheelDown && msg.Action == tea.MouseActionPress:
 		if preview != nil {
@@ -176,25 +177,25 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 		if preview != nil {
 			_ = preview.viewport.ScrollUp(scrollStep)
 		}
-	case msg.Button == tea.MouseButtonLeft && msg.Action == tea.MouseActionPress:
-		if msg.Y >= card.closeTop && msg.Y <= card.closeBottom && msg.X >= card.closeLeft && msg.X <= card.closeRight {
-			m.hidden[card.sessionID] = struct{}{}
-			if m.focusedSession == card.sessionID {
-				m.focusedSession = ""
-			}
-			delete(m.previews, card.sessionID)
-			m.resetCtrlC()
-			m.updatePreviewDimensions(m.filteredSessionCount())
-			return m, nil
-		}
-		m.focusedSession = card.sessionID
-		m.resetCtrlC()
-		if preview != nil {
-			preview.viewport.GotoBottom()
-			if preview.paneID != "" {
-				return m, fetchPaneVarsCmd(m.client, card.sessionID, preview.paneID)
-			}
-		}
+    case msg.Button == tea.MouseButtonLeft && msg.Action == tea.MouseActionPress:
+        if info := zone.Get(card.closeZoneID); info != nil && info.InBounds(msg) {
+            m.hidden[card.sessionID] = struct{}{}
+            if m.focusedSession == card.sessionID {
+                m.focusedSession = ""
+            }
+            delete(m.previews, card.sessionID)
+            m.resetCtrlC()
+            m.updatePreviewDimensions(m.filteredSessionCount())
+            return m, nil
+        }
+        m.focusedSession = card.sessionID
+        m.resetCtrlC()
+        if preview != nil {
+            preview.viewport.GotoBottom()
+            if preview.paneID != "" {
+                return m, fetchPaneVarsCmd(m.client, card.sessionID, preview.paneID)
+            }
+        }
 	}
 	return m, nil
 }

@@ -1,6 +1,9 @@
 package ui
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"github.com/charmbracelet/lipgloss"
+	zone "github.com/lrstanley/bubblezone"
+)
 
 // View renders the entire tmuxwatch interface, including title bar, search
 // state, session previews, status footer, and overlays.
@@ -45,7 +48,7 @@ func (m *Model) View() string {
 	}
 
 	if !m.paletteOpen {
-		return view
+		return zone.Scan(view)
 	}
 
 	palette := m.renderCommandPalette()
@@ -56,5 +59,5 @@ func (m *Model) View() string {
 	offsetX := max((width-paletteWidth)/2, 0)
 	offsetY := max((height-paletteHeight)/2, 0)
 
-	return overlayView(view, palette, width, height, offsetX, offsetY)
+	return zone.Scan(overlayView(view, palette, width, height, offsetX, offsetY))
 }

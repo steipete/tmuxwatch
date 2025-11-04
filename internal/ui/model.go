@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	zone "github.com/lrstanley/bubblezone"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
@@ -64,19 +65,9 @@ type sessionPreview struct {
 }
 
 type cardBounds struct {
-	sessionID    string
-	top          int
-	height       int
-	left         int
-	width        int
-	closeLeft    int
-	closeRight   int
-	closeLine    int
-	closeTop     int
-	closeBottom  int
-	closePrefix  int
-	marginTop    int
-	marginBottom int
+	sessionID   string
+	zoneID      string
+	closeZoneID string
 }
 
 type commandItem struct {
@@ -89,6 +80,7 @@ type commandItem struct {
 type Model struct {
 	client       *tmux.Client
 	pollInterval time.Duration
+	zonePrefix   string
 
 	width  int
 	height int
@@ -133,6 +125,7 @@ func NewModel(client *tmux.Client, poll time.Duration, debugMsgs []tea.Msg, trac
 	return &Model{
 		client:       client,
 		pollInterval: poll,
+		zonePrefix:   zone.NewPrefix(),
 		previews:     make(map[string]*sessionPreview),
 		hidden:       make(map[string]struct{}),
 		stale:        make(map[string]struct{}),

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	zone "github.com/lrstanley/bubblezone"
 )
 
 func (m *Model) logMouseEvent(msg tea.MouseMsg, card cardBounds, ok bool) {
@@ -13,11 +14,11 @@ func (m *Model) logMouseEvent(msg tea.MouseMsg, card cardBounds, ok bool) {
 	}
 	result := "miss"
 	if ok {
-		x0 := card.left
-		x1 := card.left + card.width - 1
-		y0 := card.top
-		y1 := card.top + card.height - 1
-		result = fmt.Sprintf("session=%s bounds=[x=%d..%d y=%d..%d]", card.sessionID, x0, x1, y0, y1)
+		if info := zone.Get(card.zoneID); info != nil {
+			result = fmt.Sprintf("session=%s bounds=[x=%d..%d y=%d..%d]", card.sessionID, info.StartX, info.EndX, info.StartY, info.EndY)
+		} else {
+			result = fmt.Sprintf("session=%s bounds=<unknown>", card.sessionID)
+		}
 	}
 	fmt.Fprintf(os.Stderr, "[mouse] action=%v button=%v pos=(%d,%d) -> %s\n", msg.Action, msg.Button, msg.X, msg.Y, result)
 }
@@ -28,16 +29,16 @@ func (m *Model) logCardLayout() {
 	}
 	fmt.Fprintln(os.Stderr, "[debug] card layout:")
 	for i, card := range m.cardLayout {
-		x0 := card.left
-		x1 := card.left + card.width - 1
-		y0 := card.top
-		y1 := card.top + card.height - 1
-		fmt.Fprintf(os.Stderr, "  [%d] session=%s bounds=[x=%d..%d y=%d..%d] close=[x=%d..%d y=%d..%d]\n",
-			i,
-			card.sessionID,
-			x0, x1,
-			y0, y1,
-			card.closeLeft, card.closeRight,
-			card.closeTop, card.closeBottom)
+		info := zone.Get(card.zoneID)
+		closeInfo := zone.Get(card.closeZoneID)
+		if info != nil {
+			fmt.Fprintf(os.Stderr, "  [%d] session=%s bounds=[x=%d..%d y=%d..%d]\n",
+				i, card.sessionID, info.StartX, info.EndX, info.StartY, info.EndY)
+		} else {
+			fmt.Fprintf(os.Stderr, "  [%d] session=%s bounds=<unknown>\n", i, card.sessionID)
+		}
+		if closeInfo != nil {
+			fmt.Fprintf(os.Stderr, "     close=[x=%d..%d y=%d..%d]\n", closeInfo.StartX, closeInfo.EndX, closeInfo.StartY, closeInfo.EndY)
+		}
 	}
 }

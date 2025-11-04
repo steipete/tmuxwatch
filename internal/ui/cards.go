@@ -6,18 +6,10 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/x/ansi"
+	zone "github.com/lrstanley/bubblezone"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
-
-func closePrefix(header string) int {
-	idx := strings.LastIndex(header, closeLabel)
-	if idx < 0 {
-		return 0
-	}
-	return ansi.StringWidth(header[:idx])
-}
 
 // renderSessionPreviews lays out each visible session card with consistent
 // sizing and mouse hit-test metadata.
@@ -65,8 +57,12 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		pulsing := now.Sub(preview.lastChanged) < pulseDuration
 		stale := m.isStale(session.ID)
 		focused := session.ID == m.focusedSession
-		headerContent := formatHeader(innerWidth, session, window, pane, focused, pulsing, stale)
-		header := lipgloss.NewStyle().Render(headerContent)
+
+		cardID := fmt.Sprintf("%scard:%s", m.zonePrefix, session.ID)
+		closeID := fmt.Sprintf("%sclose:%s", m.zonePrefix, session.ID)
+
+		close := zone.Mark(closeID, closeLabel)
+		header := lipgloss.NewStyle().Render(formatHeader(innerWidth, session, window, pane, focused, pulsing, stale, close))
 		body := preview.viewport.View()
 
 		borderStyle := baseStyle
@@ -83,46 +79,23 @@ func (m *Model) renderSessionPreviews(offset int) string {
 			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorPulse))
 		}
 
-		card := borderStyle.Render(lipgloss.JoinVertical(lipgloss.Left, header, body))
+		cardContent := borderStyle.Render(lipgloss.JoinVertical(lipgloss.Left, header, body))
+		cardContent = zone.Mark(cardID, cardContent)
 
 		rowIdx := idx / cols
 		for len(grid) <= rowIdx {
 			grid = append(grid, []string{})
 		}
-		grid[rowIdx] = append(grid[rowIdx], card)
+		grid[rowIdx] = append(grid[rowIdx], cardContent)
 
-		width := lipgloss.Width(card)
-		height := lipgloss.Height(card)
-		marginTop := borderStyle.GetMarginTop()
-		marginLeft := borderStyle.GetMarginLeft()
-		marginBottom := borderStyle.GetMarginBottom()
-		marginRight := borderStyle.GetMarginRight()
-
-		effectiveWidth := width - marginLeft - marginRight
-		if effectiveWidth <= 0 {
-			effectiveWidth = width
-		}
-		effectiveHeight := height - marginTop - marginBottom
-		if effectiveHeight <= 0 {
-			effectiveHeight = height
-		}
-
-		bounds := cardBounds{
-			sessionID:    session.ID,
-			left:         (idx%cols)*cellWidth + marginLeft,
-			width:        effectiveWidth,
-			closeLine:    1,
-			closePrefix:  closePrefix(headerContent),
-			height:       effectiveHeight,
-			marginTop:    marginTop,
-			marginBottom: marginBottom,
-		}
-		m.cardLayout = append(m.cardLayout, bounds)
+		m.cardLayout = append(m.cardLayout, cardBounds{
+			sessionID:   session.ID,
+			zoneID:      cardID,
+			closeZoneID: closeID,
+		})
 	}
 
 	var rendered []string
-	layoutIdx := 0
-	cursorY := 0
 	for _, row := range grid {
 		if len(row) == 0 {
 			continue
@@ -131,32 +104,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		for _, card := range row {
 			padded = append(padded, lipgloss.NewStyle().Width(cellWidth).Render(card))
 		}
-		rowStr := lipgloss.JoinHorizontal(lipgloss.Left, padded...)
-		rowHeight := lipgloss.Height(rowStr)
-		if rowHeight <= 0 {
-			rowHeight = 1
-		}
-		rowTop := offset + cursorY
-		for range row {
-			if layoutIdx >= len(m.cardLayout) {
-				break
-			}
-			card := &m.cardLayout[layoutIdx]
-			card.top = rowTop + card.marginTop
-			if card.height <= 0 {
-				card.height = rowHeight - card.marginTop - card.marginBottom
-				if card.height <= 0 {
-					card.height = rowHeight
-				}
-			}
-			card.closeTop = card.top
-			card.closeBottom = card.top + card.closeLine
-			card.closeLeft = card.left + card.closePrefix
-			card.closeRight = card.closeLeft + lipgloss.Width(closeLabel) - 1
-			layoutIdx++
-		}
-		rendered = append(rendered, rowStr)
-		cursorY += rowHeight
+		rendered = append(rendered, lipgloss.JoinHorizontal(lipgloss.Left, padded...))
 	}
 
 	return lipgloss.JoinVertical(lipgloss.Left, rendered...)
@@ -164,7 +112,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 
 // formatHeader builds the label line for a session card, colouring it based on
 // status and focus state.
-func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux.Pane, focused, pulsing, stale bool) string {
+func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux.Pane, focused, pulsing, stale bool, close string) string {
 	var meta []string
 	if pane.Dead {
 		meta = append(meta, pane.StatusString())
@@ -182,7 +130,7 @@ func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux
 	}
 
 	labelWidth := lipgloss.Width(label)
-	spaceForLabel := width - len(closeLabel)
+	spaceForLabel := width - lipgloss.Width(close)
 	if spaceForLabel < 1 {
 		spaceForLabel = 1
 	}
@@ -193,7 +141,7 @@ func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux
 	if padding < 0 {
 		padding = 0
 	}
-	header := label + strings.Repeat(" ", padding) + closeLabel
+	header := label + strings.Repeat(" ", padding) + close
 	style := lipgloss.NewStyle()
 	switch {
 	case pane.Dead && pane.DeadStatus != 0:
