@@ -113,6 +113,15 @@ func (m *Model) buildCommandItems() []commandItem {
 	})
 
 	items = append(items, commandItem{
+		label:   "Print card layout (stderr)",
+		enabled: len(m.cardLayout) > 0,
+		run: func(*Model) tea.Cmd {
+			m.logCardLayout()
+			return nil
+		},
+	})
+
+	items = append(items, commandItem{
 		label:   "Focus search bar (/)",
 		enabled: !m.searching,
 		run: func(*Model) tea.Cmd {

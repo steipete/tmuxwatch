@@ -31,6 +31,12 @@ func scheduleTick(interval time.Duration) tea.Cmd {
 	})
 }
 
+func emitMsg(msg tea.Msg) tea.Cmd {
+	return func() tea.Msg {
+		return msg
+	}
+}
+
 // fetchPaneContentCmd grabs the latest pane output for preview rendering.
 func fetchPaneContentCmd(client *tmux.Client, sessionID, paneID string, lines int) tea.Cmd {
 	return func() tea.Msg {

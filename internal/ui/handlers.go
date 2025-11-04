@@ -162,6 +162,7 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	card, ok := m.cardAt(msg.X, msg.Y)
+	m.logMouseEvent(msg, card, ok)
 	if !ok {
 		return m, nil
 	}

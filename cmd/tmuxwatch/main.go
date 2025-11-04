@@ -7,6 +7,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -20,10 +22,12 @@ var version = "dev"
 // main configures the tmux client, handles flag modes, and launches Bubble Tea.
 func main() {
 	var (
-		interval = flag.Duration("interval", time.Second, "tmux poll interval")
-		tmuxBin  = flag.String("tmux", "", "path to tmux binary (defaults to PATH lookup)")
-		showVer  = flag.Bool("version", false, "print version and exit")
-		dump     = flag.Bool("dump", false, "print current tmux snapshot as JSON and exit")
+		interval   = flag.Duration("interval", time.Second, "tmux poll interval")
+		tmuxBin    = flag.String("tmux", "", "path to tmux binary (defaults to PATH lookup)")
+		showVer    = flag.Bool("version", false, "print version and exit")
+		dump       = flag.Bool("dump", false, "print current tmux snapshot as JSON and exit")
+		simulate   = flag.String("debug-click", "", "simulate a mouse left-click at the given coordinates (x,y)")
+		traceMouse = flag.Bool("trace-mouse", false, "log mouse hit testing details to stderr")
 	)
 	flag.Parse()
 
@@ -56,7 +60,35 @@ func main() {
 		return
 	}
 
-	model := ui.NewModel(client, *interval)
+	var debugMsgs []tea.Msg
+	if sim := strings.TrimSpace(*simulate); sim != "" {
+		parts := strings.Split(sim, ",")
+		if len(parts) != 2 {
+			fmt.Fprintf(os.Stderr, "invalid --debug-click value %q (want x,y)\n", sim)
+			os.Exit(1)
+		}
+		x, err := strconv.Atoi(strings.TrimSpace(parts[0]))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "invalid debug-click x coordinate %q: %v\n", parts[0], err)
+			os.Exit(1)
+		}
+		y, err := strconv.Atoi(strings.TrimSpace(parts[1]))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "invalid debug-click y coordinate %q: %v\n", parts[1], err)
+			os.Exit(1)
+		}
+		debugMsgs = append(debugMsgs, tea.MouseMsg{
+			X:      x,
+			Y:      y,
+			Button: tea.MouseButtonLeft,
+			Action: tea.MouseActionPress,
+		})
+		if !*traceMouse {
+			*traceMouse = true
+		}
+	}
+
+	model := ui.NewModel(client, *interval, debugMsgs, *traceMouse)
 	program := tea.NewProgram(model, tea.WithAltScreen(), tea.WithMouseAllMotion())
 
 	if _, err := program.Run(); err != nil {

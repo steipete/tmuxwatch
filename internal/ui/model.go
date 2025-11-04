@@ -106,6 +106,9 @@ type Model struct {
 	focusedSession string
 	cardLayout     []cardBounds
 
+	debugMsgs  []tea.Msg
+	traceMouse bool
+
 	lastUpdated time.Time
 	err         error
 	inflight    bool
@@ -115,7 +118,7 @@ type Model struct {
 }
 
 // NewModel builds a Model with defaults and the provided tmux client.
-func NewModel(client *tmux.Client, poll time.Duration) *Model {
+func NewModel(client *tmux.Client, poll time.Duration, debugMsgs []tea.Msg, traceMouse bool) *Model {
 	if poll <= 0 {
 		poll = defaultPollInterval
 	}
@@ -132,10 +135,20 @@ func NewModel(client *tmux.Client, poll time.Duration) *Model {
 		searchInput:  ti,
 		cardLayout:   make([]cardBounds, 0),
 		inflight:     true,
+		debugMsgs:    append([]tea.Msg(nil), debugMsgs...),
+		traceMouse:   traceMouse,
 	}
 }
 
 // Init starts the initial tmux snapshot fetch and ticking loop.
 func (m *Model) Init() tea.Cmd {
-	return tea.Batch(fetchSnapshotCmd(m.client), scheduleTick(m.pollInterval))
+	cmds := []tea.Cmd{
+		fetchSnapshotCmd(m.client),
+		scheduleTick(m.pollInterval),
+	}
+	for _, msg := range m.debugMsgs {
+		cmds = append(cmds, emitMsg(msg))
+	}
+	m.debugMsgs = nil
+	return tea.Batch(cmds...)
 }
