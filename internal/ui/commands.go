@@ -41,6 +41,16 @@ func fetchPaneContentCmd(client *tmux.Client, sessionID, paneID string, lines in
 	}
 }
 
+// fetchPaneVarsCmd loads user-defined tmux variables for the provided pane.
+func fetchPaneVarsCmd(client *tmux.Client, sessionID, paneID string) tea.Cmd {
+	return func() tea.Msg {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		vars, err := client.PaneVariables(ctx, paneID)
+		return paneVarsMsg{sessionID: sessionID, paneID: paneID, vars: vars, err: err}
+	}
+}
+
 // sendKeysCmd forwards keystrokes to a tmux pane within a context deadline.
 func sendKeysCmd(client *tmux.Client, paneID string, keys ...string) tea.Cmd {
 	return func() tea.Msg {

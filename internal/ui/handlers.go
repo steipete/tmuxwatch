@@ -167,6 +167,9 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 		m.resetCtrlC()
 		if preview != nil {
 			preview.viewport.GotoBottom()
+			if preview.paneID != "" {
+				return m, fetchPaneVarsCmd(m.client, card.sessionID, preview.paneID)
+			}
 		}
 	}
 	return m, nil

@@ -4,6 +4,7 @@ package ui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -230,18 +231,30 @@ func (m *Model) renderStatus() string {
 // buildStatusLine highlights controls and light status details at the bottom of
 // the screen.
 func (m *Model) buildStatusLine() string {
-	help := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("245")).
-		Padding(1, 2).
-		Render("mouse: click focus, scroll logs, close [x] · keys: / search, H show hidden, q quit")
-	if m.err == nil {
-		return help
+	lines := []string{
+		lipgloss.NewStyle().
+			Foreground(lipgloss.Color("245")).
+			Padding(1, 2).
+			Render("mouse: click focus, scroll logs, close [x] · keys: / search, H show hidden, q quit"),
 	}
-	errPart := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("203")).
-		Padding(0, 2).
-		Render("Error: " + m.err.Error())
-	return lipgloss.JoinVertical(lipgloss.Left, help, errPart)
+
+	if preview, ok := m.previews[m.focusedSession]; ok && len(preview.vars) > 0 {
+		varsLine := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("244")).
+			Padding(0, 2).
+			Render(formatPaneVariables(preview.vars))
+		lines = append(lines, varsLine)
+	}
+
+	if m.err != nil {
+		errPart := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("203")).
+			Padding(0, 2).
+			Render("Error: " + m.err.Error())
+		lines = append(lines, errPart)
+	}
+
+	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
 
 // renderSearchBar formats the interactive search prompt.
@@ -283,4 +296,17 @@ func renderTitleBar(m *Model) string {
 		Foreground(lipgloss.Color("249")).
 		Render(strings.Join(metaParts, " • "))
 	return lipgloss.JoinHorizontal(lipgloss.Left, name, meta)
+}
+
+func formatPaneVariables(vars map[string]string) string {
+	keys := make([]string, 0, len(vars))
+	for k := range vars {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	parts := make([]string, 0, len(keys))
+	for _, k := range keys {
+		parts = append(parts, fmt.Sprintf("%s=%s", k, vars[k]))
+	}
+	return "vars: " + strings.Join(parts, " ")
 }

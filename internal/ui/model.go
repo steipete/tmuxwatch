@@ -40,6 +40,12 @@ type (
 		text      string
 		err       error
 	}
+	paneVarsMsg struct {
+		sessionID string
+		paneID    string
+		vars      map[string]string
+		err       error
+	}
 	errMsg        struct{ err error }
 	tickMsg       struct{}
 	searchBlurMsg struct{}
@@ -50,6 +56,7 @@ type sessionPreview struct {
 	paneID      string
 	lastContent string
 	lastChanged time.Time
+	vars        map[string]string
 }
 
 type cardBounds struct {

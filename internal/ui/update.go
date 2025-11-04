@@ -58,6 +58,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				preview.viewport.GotoBottom()
 			}
 		}
+	case paneVarsMsg:
+		if preview, ok := m.previews[msg.sessionID]; ok && preview.paneID == msg.paneID {
+			if msg.err != nil {
+				preview.vars = map[string]string{"error": msg.err.Error()}
+			} else {
+				preview.vars = msg.vars
+			}
+		}
 	case tickMsg:
 		if m.inflight {
 			return m, nil
@@ -99,8 +107,12 @@ func (m *Model) ensurePreviewsAndCapture() tea.Cmd {
 			preview.viewport.SetContent("")
 			preview.paneID = pane.ID
 			preview.lastContent = ""
+			preview.vars = nil
 		}
 		cmds = append(cmds, fetchPaneContentCmd(m.client, session.ID, pane.ID, 400))
+		if session.ID == m.focusedSession {
+			cmds = append(cmds, fetchPaneVarsCmd(m.client, session.ID, pane.ID))
+		}
 	}
 	for sessionID := range m.previews {
 		if _, ok := active[sessionID]; !ok {
