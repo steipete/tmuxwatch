@@ -21,7 +21,7 @@ func (m *Model) View() string {
 	}
 
 	var sections []string
-	title := renderTitleBar()
+	title := renderTitleBar(m)
 	sections = append(sections, title)
 	offset := lipgloss.Height(title)
 	if m.searching {
@@ -227,33 +227,21 @@ func (m *Model) renderStatus() string {
 	return content
 }
 
-// buildStatusLine summarises session counts, last refresh time, filters, and
-// current focus state for display in the footer.
+// buildStatusLine highlights controls and light status details at the bottom of
+// the screen.
 func (m *Model) buildStatusLine() string {
-	style := lipgloss.NewStyle().Foreground(lipgloss.Color("245")).Padding(0, 2)
-	last := "never"
-	if !m.lastUpdated.IsZero() {
-		last = fmt.Sprintf("%s ago", coarseDuration(time.Since(m.lastUpdated)))
+	help := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("245")).
+		Padding(1, 2).
+		Render("mouse: click focus, scroll logs, close [x] · keys: / search, H show hidden, q quit")
+	if m.err == nil {
+		return help
 	}
-	errPart := ""
-	if m.err != nil {
-		errPart = lipgloss.NewStyle().Foreground(lipgloss.Color("203")).Render("Error: " + m.err.Error())
-	}
-	filterPart := ""
-	if m.searchQuery != "" {
-		filterPart = fmt.Sprintf(" | filter: %s", m.searchQuery)
-	}
-	focusPart := ""
-	if m.focusedSession != "" {
-		focusPart = fmt.Sprintf(" | focused: %s", m.focusedSession)
-	}
-	info := fmt.Sprintf("sessions: %d | last refresh: %s%s%s", len(m.sessions), last, filterPart, focusPart)
-	help := "mouse: click focus, scroll logs, close [x] · keys: / search, H show hidden, q quit"
-	status := lipgloss.JoinHorizontal(lipgloss.Left, style.Render(info), lipgloss.NewStyle().PaddingLeft(2).Render(help))
-	if errPart != "" {
-		status = lipgloss.JoinHorizontal(lipgloss.Left, status, lipgloss.NewStyle().PaddingLeft(2).Render(errPart))
-	}
-	return status
+	errPart := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("203")).
+		Padding(0, 2).
+		Render("Error: " + m.err.Error())
+	return lipgloss.JoinVertical(lipgloss.Left, help, errPart)
 }
 
 // renderSearchBar formats the interactive search prompt.
@@ -271,11 +259,28 @@ func renderSearchSummary(query string) string {
 }
 
 // renderTitleBar prints the tmuxwatch heading.
-func renderTitleBar() string {
-	style := lipgloss.NewStyle().
+func renderTitleBar(m *Model) string {
+	baseStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("231")).
 		Background(lipgloss.Color("62")).
-		Bold(true).
 		Padding(0, 2)
-	return style.Render("tmuxwatch ▸ live tmux monitor")
+	name := baseStyle.Copy().Bold(true).Render("tmuxwatch")
+
+	metaParts := []string{fmt.Sprintf("%d sessions", len(m.sessions))}
+	if !m.lastUpdated.IsZero() {
+		metaParts = append(metaParts, fmt.Sprintf("refreshed %s ago", coarseDuration(time.Since(m.lastUpdated))))
+	}
+	if m.focusedSession != "" {
+		metaParts = append(metaParts, "focus "+m.focusedSession)
+	}
+	if m.searchQuery != "" {
+		metaParts = append(metaParts, fmt.Sprintf("filter %q", m.searchQuery))
+	}
+	if len(metaParts) == 0 {
+		return name
+	}
+	meta := baseStyle.Copy().
+		Foreground(lipgloss.Color("249")).
+		Render(strings.Join(metaParts, " • "))
+	return lipgloss.JoinHorizontal(lipgloss.Left, name, meta)
 }
