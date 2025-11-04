@@ -33,19 +33,20 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleMouse(msg)
 	case searchBlurMsg:
 		m.searching = false
-	case snapshotMsg:
-		m.inflight = false
-		m.err = nil
-		m.lastUpdated = msg.snapshot.Timestamp
-		m.sessions = msg.snapshot.Sessions
-		cmd := m.ensurePreviewsAndCapture()
-		m.updatePreviewDimensions(m.filteredSessionCount())
-		return m, tea.Batch(scheduleTick(m.pollInterval), cmd)
-	case errMsg:
-		m.inflight = false
-		m.err = msg.err
-		return m, scheduleTick(m.pollInterval)
-	case paneContentMsg:
+    case snapshotMsg:
+        m.inflight = false
+        m.err = nil
+        m.lastUpdated = msg.snapshot.Timestamp
+        m.sessions = msg.snapshot.Sessions
+        m.updateStaleSessions()
+        cmd := m.ensurePreviewsAndCapture()
+        m.updatePreviewDimensions(m.filteredSessionCount())
+        return m, tea.Batch(scheduleTick(m.pollInterval), cmd)
+    case errMsg:
+        m.inflight = false
+        m.err = msg.err
+        return m, scheduleTick(m.pollInterval)
+    case paneContentMsg:
 		if preview, ok := m.previews[msg.sessionID]; ok && preview.paneID == msg.paneID {
 			content := strings.TrimRight(msg.text, "\n")
 			if msg.err != nil {
@@ -58,19 +59,28 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				preview.viewport.GotoBottom()
 			}
 		}
-	case paneVarsMsg:
-		if preview, ok := m.previews[msg.sessionID]; ok && preview.paneID == msg.paneID {
-			if msg.err != nil {
-				preview.vars = map[string]string{"error": msg.err.Error()}
-			} else {
-				preview.vars = msg.vars
-			}
-		}
-	case tickMsg:
-		if m.inflight {
-			return m, nil
-		}
-		m.inflight = true
+    case paneVarsMsg:
+        if preview, ok := m.previews[msg.sessionID]; ok && preview.paneID == msg.paneID {
+            if msg.err != nil {
+                preview.vars = map[string]string{"error": msg.err.Error()}
+            } else {
+                preview.vars = msg.vars
+            }
+        }
+    case killSessionMsg:
+        m.inflight = true
+        if m.focusedSession == msg.sessionID {
+            m.focusedSession = ""
+        }
+        delete(m.previews, msg.sessionID)
+        delete(m.hidden, msg.sessionID)
+        delete(m.stale, msg.sessionID)
+        return m, fetchSnapshotCmd(m.client)
+    case tickMsg:
+        if m.inflight {
+            return m, nil
+        }
+        m.inflight = true
 		return m, fetchSnapshotCmd(m.client)
 	}
 	return m, nil
@@ -103,16 +113,16 @@ func (m *Model) ensurePreviewsAndCapture() tea.Cmd {
 			preview = &sessionPreview{viewport: &vp, lastChanged: time.Now()}
 			m.previews[session.ID] = preview
 		}
-		if preview.paneID != pane.ID {
-			preview.viewport.SetContent("")
-			preview.paneID = pane.ID
-			preview.lastContent = ""
-			preview.vars = nil
-		}
-		cmds = append(cmds, fetchPaneContentCmd(m.client, session.ID, pane.ID, 400))
-		if session.ID == m.focusedSession {
-			cmds = append(cmds, fetchPaneVarsCmd(m.client, session.ID, pane.ID))
-		}
+        if preview.paneID != pane.ID {
+            preview.viewport.SetContent("")
+            preview.paneID = pane.ID
+            preview.lastContent = ""
+            preview.vars = nil
+        }
+        cmds = append(cmds, fetchPaneContentCmd(m.client, session.ID, pane.ID, 400))
+        if session.ID == m.focusedSession {
+            cmds = append(cmds, fetchPaneVarsCmd(m.client, session.ID, pane.ID))
+        }
 	}
 	for sessionID := range m.previews {
 		if _, ok := active[sessionID]; !ok {

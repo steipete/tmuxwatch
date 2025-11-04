@@ -97,13 +97,25 @@ func (c *Client) CapturePane(ctx context.Context, paneID string, lines int) (str
 // SendKeys forwards key sequences to a tmux pane so the user can interact with
 // it through tmuxwatch.
 func (c *Client) SendKeys(ctx context.Context, paneID string, keys ...string) error {
-	if paneID == "" {
-		return fmt.Errorf("pane id cannot be empty")
-	}
-	if len(keys) == 0 {
-		return nil
-	}
-	args := append([]string{"send-keys", "-t", paneID}, keys...)
-	cmd := exec.CommandContext(ctx, c.bin, args...)
-	return cmd.Run()
+    if paneID == "" {
+        return fmt.Errorf("pane id cannot be empty")
+    }
+    if len(keys) == 0 {
+        return nil
+    }
+    args := append([]string{"send-keys", "-t", paneID}, keys...)
+    cmd := exec.CommandContext(ctx, c.bin, args...)
+    return cmd.Run()
+}
+
+// KillSession terminates a tmux session by id.
+func (c *Client) KillSession(ctx context.Context, sessionID string) error {
+    if sessionID == "" {
+        return fmt.Errorf("session id cannot be empty")
+    }
+    cmd := exec.CommandContext(ctx, c.bin, "kill-session", "-t", sessionID)
+    if err := cmd.Run(); err != nil {
+        return fmt.Errorf("kill-session %s: %w", sessionID, err)
+    }
+    return nil
 }

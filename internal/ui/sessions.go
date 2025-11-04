@@ -3,6 +3,7 @@ package ui
 
 import (
 	"strings"
+	"time"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
@@ -52,4 +53,33 @@ func activePane(window tmux.Window) (tmux.Pane, bool) {
 		return window.Panes[0], true
 	}
 	return tmux.Pane{}, false
+}
+
+func sessionAllPanesDead(session tmux.Session) bool {
+	found := false
+	for _, window := range session.Windows {
+		for _, pane := range window.Panes {
+			found = true
+			if !pane.Dead {
+				return false
+			}
+		}
+	}
+	return found
+}
+
+func sessionLatestActivity(session tmux.Session) time.Time {
+	latest := session.CreatedAt
+	for _, window := range session.Windows {
+		for _, pane := range window.Panes {
+			ts := pane.LastActivity
+			if ts.IsZero() {
+				ts = pane.CreatedAt
+			}
+			if ts.After(latest) {
+				latest = ts
+			}
+		}
+	}
+	return latest
 }

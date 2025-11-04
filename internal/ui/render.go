@@ -89,23 +89,26 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		preview.viewport.Width = innerWidth
 		preview.viewport.Height = innerHeight
 
-		pulsing := now.Sub(preview.lastChanged) < pulseDuration
-		focused := session.ID == m.focusedSession
-		headerContent := formatHeader(innerWidth, session, window, pane, focused, pulsing)
+        pulsing := now.Sub(preview.lastChanged) < pulseDuration
+        stale := m.isStale(session.ID)
+        focused := session.ID == m.focusedSession
+        headerContent := formatHeader(innerWidth, session, window, pane, focused, pulsing, stale)
 		header := lipgloss.NewStyle().Render(headerContent)
 		body := preview.viewport.View()
 
 		borderStyle := baseStyle
-		switch {
-		case pane.Dead && pane.DeadStatus != 0:
-			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorExitFail))
-		case pane.Dead:
-			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorExitOK))
-		case focused:
-			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorFocus))
-		case pulsing:
-			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorPulse))
-		}
+        switch {
+        case pane.Dead && pane.DeadStatus != 0:
+            borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorExitFail))
+        case pane.Dead:
+            borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorExitOK))
+        case stale:
+            borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorStale))
+        case focused:
+            borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorFocus))
+        case pulsing:
+            borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorPulse))
+        }
 
 		card := borderStyle.Render(lipgloss.JoinVertical(lipgloss.Left, header, body))
 
@@ -183,7 +186,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 
 // formatHeader builds the label line for a session card, colouring it based on
 // status and focus state.
-func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux.Pane, focused, pulsing bool) string {
+func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux.Pane, focused, pulsing, stale bool) string {
 	var meta []string
 	if pane.Dead {
 		meta = append(meta, pane.StatusString())
@@ -192,9 +195,13 @@ func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux
 		meta = append(meta, fmt.Sprintf("last %s", coarseDuration(time.Since(pane.LastActivity))))
 	}
 	label := fmt.Sprintf("%s · %s · %s", session.Name, window.Name, pane.TitleOrCmd())
-	if len(meta) > 0 {
-		label += " · " + strings.Join(meta, " · ")
-	}
+    if stale {
+        meta = append(meta, "stale")
+    }
+
+    if len(meta) > 0 {
+        label += " · " + strings.Join(meta, " · ")
+    }
 	labelWidth := lipgloss.Width(label)
 	spaceForLabel := width - len(closeLabel)
 	if spaceForLabel < 1 {
@@ -237,12 +244,20 @@ func (m *Model) renderStatus() string {
 // buildStatusLine highlights controls and light status details at the bottom of
 // the screen.
 func (m *Model) buildStatusLine() string {
-	lines := []string{
-		lipgloss.NewStyle().
-			Foreground(lipgloss.Color("245")).
-			Padding(1, 2).
-			Render("mouse: click focus, scroll logs, close [x] · keys: / search, H show hidden, q quit"),
-	}
+    lines := []string{
+        lipgloss.NewStyle().
+            Foreground(lipgloss.Color("245")).
+            Padding(1, 2).
+            Render("mouse: click focus, scroll logs, close [x] · keys: / search, H show hidden, X clean stale, q quit"),
+    }
+
+    if stale := m.staleSessionNames(); len(stale) > 0 {
+        staleLine := lipgloss.NewStyle().
+            Foreground(lipgloss.Color("246")).
+            Padding(0, 2).
+            Render("stale sessions: " + strings.Join(stale, ", ") + " (focus + X to clean)")
+        lines = append(lines, staleLine)
+    }
 
 	if preview, ok := m.previews[m.focusedSession]; ok && len(preview.vars) > 0 {
 		varsLine := lipgloss.NewStyle().

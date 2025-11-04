@@ -2,6 +2,7 @@ package ui
 
 import (
 	"testing"
+	"time"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
@@ -71,5 +72,40 @@ func TestActivePane(t *testing.T) {
 	}
 	if got.ID != "%2" {
 		t.Fatalf("activePane = %s, want %%2", got.ID)
+	}
+}
+
+func TestSessionAllPanesDead(t *testing.T) {
+	t.Parallel()
+
+	session := tmux.Session{
+		Windows: []tmux.Window{
+			{Panes: []tmux.Pane{{Dead: true}, {Dead: true}}},
+		},
+	}
+	if !sessionAllPanesDead(session) {
+		t.Fatal("expected session to be considered dead")
+	}
+
+	session.Windows[0].Panes[1].Dead = false
+	if sessionAllPanesDead(session) {
+		t.Fatal("expected session to be considered alive")
+	}
+}
+
+func TestSessionLatestActivity(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	session := tmux.Session{
+		CreatedAt: now.Add(-2 * time.Hour),
+		Windows: []tmux.Window{
+			{Panes: []tmux.Pane{{LastActivity: now.Add(-30 * time.Minute)}, {LastActivity: now.Add(-10 * time.Minute)}}},
+		},
+	}
+
+	got := sessionLatestActivity(session)
+	if !got.Equal(now.Add(-10 * time.Minute)) {
+		t.Fatalf("sessionLatestActivity = %v, want %v", got, now.Add(-10*time.Minute))
 	}
 }
