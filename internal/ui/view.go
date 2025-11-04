@@ -1,10 +1,6 @@
 package ui
 
-import (
-	"strings"
-
-	"github.com/charmbracelet/lipgloss"
-)
+import "github.com/charmbracelet/lipgloss"
 
 // View renders the entire tmuxwatch interface, including title bar, search
 // state, session previews, status footer, and overlays.
@@ -27,13 +23,10 @@ func (m *Model) View() string {
 		offset += lipgloss.Height(summary)
 	}
 
-	sections = append(sections, "")
+	sections = append(sections, lipgloss.NewStyle().Render(""))
 	offset++
 
 	previews := m.renderSessionPreviews(offset)
-	if m.traceMouse {
-		m.logCardLayout()
-	}
 	if previews == "" {
 		sections = append(sections, lipgloss.NewStyle().Padding(1, 2).Render("No sessions to display."))
 	} else {
@@ -41,7 +34,11 @@ func (m *Model) View() string {
 	}
 
 	sections = append(sections, m.renderStatus())
-	view := strings.Join(sections, "\n")
+	view := lipgloss.JoinVertical(lipgloss.Left, sections...)
+
+	if m.traceMouse {
+		m.logCardLayout()
+	}
 
 	if !m.paletteOpen {
 		return view
