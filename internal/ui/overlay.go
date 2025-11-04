@@ -12,12 +12,13 @@ func overlayView(base, overlay string, width, height, offsetX, offsetY int) stri
 	baseWidth := lipgloss.Width(base)
 	baseHeight := countLines(base)
 
+	overlayWidth := lipgloss.Width(overlay)
+	overlayHeight := countLines(overlay)
+
 	if width <= 0 {
 		width = baseWidth
 	}
-	if width <= 0 {
-		width = lipgloss.Width(overlay)
-	}
+	width = max(width, offsetX+overlayWidth)
 	if width <= 0 {
 		width = 1
 	}
@@ -25,9 +26,7 @@ func overlayView(base, overlay string, width, height, offsetX, offsetY int) stri
 	if height <= 0 {
 		height = baseHeight
 	}
-	if height <= 0 {
-		height = countLines(overlay)
-	}
+	height = max(height, offsetY+overlayHeight)
 	if height <= 0 {
 		height = 1
 	}
@@ -36,15 +35,6 @@ func overlayView(base, overlay string, width, height, offsetX, offsetY int) stri
 	cellbuf.SetContentRect(baseBuf, base, image.Rect(0, 0, width, height))
 
 	if overlay != "" {
-		overlayWidth := lipgloss.Width(overlay)
-		overlayHeight := countLines(overlay)
-		if overlayWidth > width {
-			overlayWidth = width
-		}
-		if overlayHeight > height {
-			overlayHeight = height
-		}
-
 		oBuf := cellbuf.NewBuffer(overlayWidth, overlayHeight)
 		cellbuf.SetContentRect(oBuf, overlay, image.Rect(0, 0, overlayWidth, overlayHeight))
 

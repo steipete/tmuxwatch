@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -25,7 +27,13 @@ func (m *Model) View() string {
 		offset += lipgloss.Height(summary)
 	}
 
+	sections = append(sections, "")
+	offset++
+
 	previews := m.renderSessionPreviews(offset)
+	if m.traceMouse {
+		m.logCardLayout()
+	}
 	if previews == "" {
 		sections = append(sections, lipgloss.NewStyle().Padding(1, 2).Render("No sessions to display."))
 	} else {
@@ -33,17 +41,17 @@ func (m *Model) View() string {
 	}
 
 	sections = append(sections, m.renderStatus())
-	view := lipgloss.JoinVertical(lipgloss.Left, sections...)
+	view := strings.Join(sections, "\n")
 
 	if !m.paletteOpen {
 		return view
 	}
 
 	palette := m.renderCommandPalette()
-	width := max(m.width, lipgloss.Width(view))
-	height := max(m.height, countLines(view))
 	paletteWidth := lipgloss.Width(palette)
 	paletteHeight := countLines(palette)
+	width := max(m.width, max(lipgloss.Width(view), paletteWidth))
+	height := max(m.height, max(countLines(view), paletteHeight))
 	offsetX := max((width-paletteWidth)/2, 0)
 	offsetY := max((height-paletteHeight)/2, 0)
 
