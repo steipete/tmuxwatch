@@ -42,11 +42,23 @@ func (m *Model) View() string {
 		sections = append(sections, previews)
 	}
 
-	sections = append(sections, m.renderStatus())
+	view := lipgloss.JoinVertical(lipgloss.Left, sections...)
+
 	if m.paletteOpen {
-		sections = append(sections, m.renderCommandPalette())
+		palette := m.renderCommandPalette()
+		overlay := lipgloss.Place(
+			max(m.width, lipgloss.Width(view)),
+			max(m.height, countLines(view)),
+			lipgloss.Center,
+			lipgloss.Center,
+			palette,
+			lipgloss.WithWhitespaceChars(" "),
+			lipgloss.WithWhitespaceBackground(lipgloss.Color("235")),
+		)
+		return overlayView(view, overlay, max(m.width, lipgloss.Width(view)), max(m.height, countLines(view)))
 	}
-	return lipgloss.JoinVertical(lipgloss.Left, sections...)
+
+	return view
 }
 
 // renderSessionPreviews lays out each visible session card with consistent
@@ -122,44 +134,44 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		}
 		grid[rowIdx] = append(grid[rowIdx], card)
 
-        width := lipgloss.Width(card)
-        height := lipgloss.Height(card)
-        marginTop := borderStyle.GetMarginTop()
-        marginLeft := borderStyle.GetMarginLeft()
-        marginBottom := borderStyle.GetMarginBottom()
-        marginRight := borderStyle.GetMarginRight()
+		width := lipgloss.Width(card)
+		height := lipgloss.Height(card)
+		marginTop := borderStyle.GetMarginTop()
+		marginLeft := borderStyle.GetMarginLeft()
+		marginBottom := borderStyle.GetMarginBottom()
+		marginRight := borderStyle.GetMarginRight()
 
-        effectiveWidth := width - marginLeft - marginRight
-        if effectiveWidth <= 0 {
-            effectiveWidth = width
-        }
-        effectiveHeight := height - marginTop - marginBottom
-        if effectiveHeight <= 0 {
-            effectiveHeight = height
-        }
+		effectiveWidth := width - marginLeft - marginRight
+		if effectiveWidth <= 0 {
+			effectiveWidth = width
+		}
+		effectiveHeight := height - marginTop - marginBottom
+		if effectiveHeight <= 0 {
+			effectiveHeight = height
+		}
 
-        closeWidth := len(closeLabel)
-        colIndex := idx % cols
-        left := colIndex * cellWidth
-        cardLeft := left + marginLeft
-        cardWidth := effectiveWidth
-        cardHeight := effectiveHeight
-        closeRight := cardLeft + cardWidth - 1 - cardPadding
-        if closeRight < cardLeft {
-            closeRight = cardLeft
-        }
-        closeLeft := max(cardLeft, closeRight-closeWidth+1)
-        bounds := cardBounds{
-            sessionID:  session.ID,
-            left:       cardLeft,
-            width:      cardWidth,
-            closeLeft:  closeLeft,
-            closeRight: closeRight,
-            height:     cardHeight,
-            marginTop:  marginTop,
-            marginBottom: marginBottom,
-        }
-        m.cardLayout = append(m.cardLayout, bounds)
+		closeWidth := len(closeLabel)
+		colIndex := idx % cols
+		left := colIndex * cellWidth
+		cardLeft := left + marginLeft
+		cardWidth := effectiveWidth
+		cardHeight := effectiveHeight
+		closeRight := cardLeft + cardWidth - 1 - cardPadding
+		if closeRight < cardLeft {
+			closeRight = cardLeft
+		}
+		closeLeft := max(cardLeft, closeRight-closeWidth+1)
+		bounds := cardBounds{
+			sessionID:    session.ID,
+			left:         cardLeft,
+			width:        cardWidth,
+			closeLeft:    closeLeft,
+			closeRight:   closeRight,
+			height:       cardHeight,
+			marginTop:    marginTop,
+			marginBottom: marginBottom,
+		}
+		m.cardLayout = append(m.cardLayout, bounds)
 	}
 
 	var rendered []string
@@ -178,21 +190,21 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		if rowHeight <= 0 {
 			rowHeight = 1
 		}
-        rowTop := offset + cursorY
-        for range row {
-            if layoutIdx >= len(m.cardLayout) {
-                break
-            }
-            card := &m.cardLayout[layoutIdx]
-            card.top = rowTop + card.marginTop
-            if card.height <= 0 {
-                card.height = rowHeight - card.marginTop - card.marginBottom
-                if card.height <= 0 {
-                    card.height = rowHeight
-                }
-            }
-            layoutIdx++
-        }
+		rowTop := offset + cursorY
+		for range row {
+			if layoutIdx >= len(m.cardLayout) {
+				break
+			}
+			card := &m.cardLayout[layoutIdx]
+			card.top = rowTop + card.marginTop
+			if card.height <= 0 {
+				card.height = rowHeight - card.marginTop - card.marginBottom
+				if card.height <= 0 {
+					card.height = rowHeight
+				}
+			}
+			layoutIdx++
+		}
 		rendered = append(rendered, rowStr)
 		cursorY += rowHeight
 	}
