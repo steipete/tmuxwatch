@@ -46,7 +46,7 @@ func (m *Model) updatePreviewDimensions(count int) {
 // cardAt resolves the card located at the given terminal coordinates.
 func (m *Model) cardAt(x, y int) (cardBounds, bool) {
 	for _, card := range m.cardLayout {
-		if y >= card.top && y <= card.bottom && x >= card.left && x <= card.right {
+		if y >= card.top && y < card.top+card.height && x >= card.left && x < card.left+card.width {
 			return card, true
 		}
 	}

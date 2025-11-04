@@ -89,26 +89,26 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		preview.viewport.Width = innerWidth
 		preview.viewport.Height = innerHeight
 
-        pulsing := now.Sub(preview.lastChanged) < pulseDuration
-        stale := m.isStale(session.ID)
-        focused := session.ID == m.focusedSession
-        headerContent := formatHeader(innerWidth, session, window, pane, focused, pulsing, stale)
+		pulsing := now.Sub(preview.lastChanged) < pulseDuration
+		stale := m.isStale(session.ID)
+		focused := session.ID == m.focusedSession
+		headerContent := formatHeader(innerWidth, session, window, pane, focused, pulsing, stale)
 		header := lipgloss.NewStyle().Render(headerContent)
 		body := preview.viewport.View()
 
 		borderStyle := baseStyle
-        switch {
-        case pane.Dead && pane.DeadStatus != 0:
-            borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorExitFail))
-        case pane.Dead:
-            borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorExitOK))
-        case stale:
-            borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorStale))
-        case focused:
-            borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorFocus))
-        case pulsing:
-            borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorPulse))
-        }
+		switch {
+		case pane.Dead && pane.DeadStatus != 0:
+			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorExitFail))
+		case pane.Dead:
+			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorExitOK))
+		case stale:
+			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorStale))
+		case focused:
+			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorFocus))
+		case pulsing:
+			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorPulse))
+		}
 
 		card := borderStyle.Render(lipgloss.JoinVertical(lipgloss.Left, header, body))
 
@@ -123,7 +123,6 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		closeWidth := len(closeLabel)
 		colIndex := idx % cols
 		left := colIndex * cellWidth
-		right := left + cellWidth - 1
 		contentRight := left + width - 1
 		if contentRight < left {
 			contentRight = left
@@ -139,7 +138,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		bounds := cardBounds{
 			sessionID:  session.ID,
 			left:       left,
-			right:      right,
+			width:      cellWidth,
 			closeLeft:  closeLeft,
 			closeRight: closeRight,
 			height:     height,
@@ -170,11 +169,9 @@ func (m *Model) renderSessionPreviews(offset int) string {
 			}
 			card := &m.cardLayout[layoutIdx]
 			card.top = rowTop
-			h := card.height
-			if h <= 0 {
-				h = rowHeight
+			if card.height <= 0 {
+				card.height = rowHeight
 			}
-			card.bottom = rowTop + h - 1
 			layoutIdx++
 		}
 		rendered = append(rendered, rowStr)
@@ -195,13 +192,13 @@ func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux
 		meta = append(meta, fmt.Sprintf("last %s", coarseDuration(time.Since(pane.LastActivity))))
 	}
 	label := fmt.Sprintf("%s · %s · %s", session.Name, window.Name, pane.TitleOrCmd())
-    if stale {
-        meta = append(meta, "stale")
-    }
+	if stale {
+		meta = append(meta, "stale")
+	}
 
-    if len(meta) > 0 {
-        label += " · " + strings.Join(meta, " · ")
-    }
+	if len(meta) > 0 {
+		label += " · " + strings.Join(meta, " · ")
+	}
 	labelWidth := lipgloss.Width(label)
 	spaceForLabel := width - len(closeLabel)
 	if spaceForLabel < 1 {
@@ -244,20 +241,20 @@ func (m *Model) renderStatus() string {
 // buildStatusLine highlights controls and light status details at the bottom of
 // the screen.
 func (m *Model) buildStatusLine() string {
-    lines := []string{
-        lipgloss.NewStyle().
-            Foreground(lipgloss.Color("245")).
-            Padding(1, 2).
-            Render("mouse: click focus, scroll logs, close [x] · keys: / search, H show hidden, X clean stale, q quit"),
-    }
+	lines := []string{
+		lipgloss.NewStyle().
+			Foreground(lipgloss.Color("245")).
+			Padding(1, 2).
+			Render("mouse: click focus, scroll logs, close [x] · keys: / search, H show hidden, X clean stale, q quit"),
+	}
 
-    if stale := m.staleSessionNames(); len(stale) > 0 {
-        staleLine := lipgloss.NewStyle().
-            Foreground(lipgloss.Color("246")).
-            Padding(0, 2).
-            Render("stale sessions: " + strings.Join(stale, ", ") + " (focus + X to clean)")
-        lines = append(lines, staleLine)
-    }
+	if stale := m.staleSessionNames(); len(stale) > 0 {
+		staleLine := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("246")).
+			Padding(0, 2).
+			Render("stale sessions: " + strings.Join(stale, ", ") + " (focus + X to clean)")
+		lines = append(lines, staleLine)
+	}
 
 	if preview, ok := m.previews[m.focusedSession]; ok && len(preview.vars) > 0 {
 		varsLine := lipgloss.NewStyle().

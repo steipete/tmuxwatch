@@ -65,12 +65,12 @@ func sendKeysCmd(client *tmux.Client, paneID string, keys ...string) tea.Cmd {
 
 // killSessionCmd terminates a tmux session and triggers a refresh.
 func killSessionCmd(client *tmux.Client, sessionID string) tea.Cmd {
-    return func() tea.Msg {
-        ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-        defer cancel()
-        if err := client.KillSession(ctx, sessionID); err != nil {
-            return errMsg{err: err}
-        }
-        return killSessionMsg{sessionID: sessionID}
-    }
+	return func() tea.Msg {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		if err := client.KillSession(ctx, sessionID); err != nil {
+			return errMsg{err: err}
+		}
+		return killSessionMsg{sessionID: sessionID}
+	}
 }

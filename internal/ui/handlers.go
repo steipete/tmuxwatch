@@ -13,7 +13,7 @@ import (
 
 // handleGlobalKey processes keys that apply regardless of focus.
 func (m *Model) handleGlobalKey(msg tea.KeyMsg) (bool, tea.Cmd) {
-    switch msg.String() {
+	switch msg.String() {
 	case "/", "ctrl+f":
 		m.resetCtrlC()
 		m.searching = true
@@ -35,20 +35,20 @@ func (m *Model) handleGlobalKey(msg tea.KeyMsg) (bool, tea.Cmd) {
 			m.updatePreviewDimensions(m.filteredSessionCount())
 		}
 		return true, nil
-    case "q":
-        m.resetCtrlC()
-        return true, tea.Quit
-    case "X":
-        if m.focusedSession == "" {
-            return true, nil
-        }
-        if !m.isStale(m.focusedSession) {
-            return true, nil
-        }
-        m.resetCtrlC()
-        return true, killSessionCmd(m.client, m.focusedSession)
-    }
-    return false, nil
+	case "q":
+		m.resetCtrlC()
+		return true, tea.Quit
+	case "X":
+		if m.focusedSession == "" {
+			return true, nil
+		}
+		if !m.isStale(m.focusedSession) {
+			return true, nil
+		}
+		m.resetCtrlC()
+		return true, killSessionCmd(m.client, m.focusedSession)
+	}
+	return false, nil
 }
 
 // handleFocusedKey forwards navigation and control keys to the focused pane or
