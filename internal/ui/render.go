@@ -218,6 +218,8 @@ func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux
 		style = style.Foreground(lipgloss.Color(headerColorExitFail))
 	case pane.Dead:
 		style = style.Foreground(lipgloss.Color(headerColorExitOK))
+	case stale:
+		style = style.Foreground(lipgloss.Color(headerColorStale))
 	case focused:
 		style = style.Foreground(lipgloss.Color(headerColorFocus))
 	case pulsing:

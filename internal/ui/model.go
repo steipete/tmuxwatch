@@ -32,6 +32,7 @@ const (
 	headerColorPulse    = "219"
 	headerColorExitFail = "203"
 	headerColorExitOK   = "37"
+	headerColorStale    = "103"
 )
 
 type (
