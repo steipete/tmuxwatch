@@ -1,40 +1,69 @@
 # tmuxwatch
 
-tmuxwatch is a terminal dashboard that keeps eyes on every tmux session, window, and pane in real time. It polls tmux, captures active pane output, and renders a Bubble Tea UI so you can stay in-monitoring mode without leaving the terminal.
+`tmuxwatch` is a Charmbracelet-powered dashboard that keeps eyes on every tmux session, window, and pane without ever leaving the terminal.
 
-## Features
-- **Live overview**: Sessions appear as cards with continuously refreshed pane output and status pulses when logs change.
-- **Keyboard-first controls**: Filter with `/`, navigate cards like a log viewer, and forward keystrokes directly into the underlying pane.
-- **Mouse support**: Click to focus, scroll to browse history, or close a session via the inline `[x]`.
-- **Automation friendly**: `--dump` flag prints the current tmux topology as JSON for scripts or quick debugging.
+## Highlights
+- **Live tmux snapshot**: Polls `list-sessions`, `list-windows`, and `list-panes`, stitches the hierarchy together, and shows the latest capture-pane output per session.
+- **Keyboard & mouse aware**: `/` to search, arrow/PageUp/PageDown to scroll, `X` to kill a focused stale session, `ctrl+X` to clean *all* stale sessions, and mouse clicks/scrolls to focus or close cards.
+- **Command palette (`ctrl+P`)**: Run actions (refresh, show hidden, clean stale) from a centered overlay.
+- **Automation friendly**: `--dump` prints the current tmux topology as JSON for scripts or debugging.
 
-## Quick Start
+## Install & Run
 ```sh
-tmux new-session -d -s watch 'go run ./cmd/tmuxwatch'
+go install github.com/steipete/tmuxwatch/cmd/tmuxwatch@latest
+
+# best practice: spawn inside tmux so key bindings work as expected
+tmux new-session -d -s watch 'tmuxwatch'
 tmux attach -t watch
 ```
-Press `q` (or double `ctrl+c`) to exit. Prefer running tmuxwatch in its own tmux session to keep the UI isolated from your workspaces.
+Press `q` (or double `ctrl+c`) to exit. Prefer running tmuxwatch in its own tmux session to keep the UI isolated from your workspaces. For local development you can substitute `go run ./cmd/tmuxwatch` inside the session.
 
 ## CLI Flags
-- `--interval <duration>`: Poll frequency (default `1s`).
-- `--tmux <path>`: Path to the tmux binary; defaults to `$PATH` lookup.
-- `--dump`: Print the current snapshot as indented JSON and exit.
-- `--version`: Display the build version and exit.
+- `--interval <duration>`: tmux poll frequency (default `1s`).
+- `--tmux <path>`: tmux binary to execute (defaults to `$PATH`).
+- `--dump`: emit the current snapshot as indented JSON and exit.
+- `--version`: print the build/version string.
 
-## Architecture Overview
-- `cmd/tmuxwatch/`: CLI entry point wiring flags, versioning, and Bubble Tea program setup.
-- `internal/tmux/`: Shells out to tmux, parses `list-*` output, and exposes reusable snapshot types plus capture/send helpers.
-- `internal/ui/`: Modular Bubble Tea model split into model/update/handlers/layout/render/utility files and matching unit tests.
-- `docs/`: Product and UX backlogs; `AGENTS.md` offers contributor directives.
-
-## Development
-```sh
-go build ./...
-go test ./...
-make fmt && make lint
-tmux new-session -d -s watch 'go run ./cmd/tmuxwatch --dump'; tmux kill-session -t watch
+## Keyboard & Mouse Cheat Sheet
 ```
-Always run the application inside tmux; never invoke `go run` directly from a bare shell when verifying behaviour.
+/ or ctrl+f   open search; type to filter sessions/windows/panes
+esc           clear search or close palette
+H             show hidden sessions
+X             kill the focused stale session
+ctrl+X        kill every stale session
+ctrl+P        open/close the command palette
+q / ctrl+c    quit (double ctrl+c quits even if pane is alive)
+mouse         click to focus, scroll to browse logs, click [x] to hide
+```
+
+## Architecture
+- `cmd/tmuxwatch/`: CLI entry point, flag parsing, Bubble Tea program setup.
+- `internal/tmux/`: thin wrapper over the tmux binary (snapshot capture, capture-pane, send-keys, kill-session, option queries).
+- `internal/ui/`: Bubble Tea model split into focused files (`model`, `update`, `handlers`, `cards`, `status`, `palette`, `overlay`, etc.).
+- `docs/`: contributor docs (`AGENTS.md`, `idiomatic-go.md`).
+
+The UI intentionally avoids third-party “magic”; it leans on Bubble Tea + Lip Gloss primitives so behaviour is explicit.
+
+## Development Workflow
+```sh
+# format + lint
+make fmt
+make lint
+
+# run tests (includes table-driven/unit tests in internal/ui and internal/tmux)
+go test ./...
+
+go run ./cmd/tmuxwatch --dump  # validate tmux JSON snapshot from inside tmux
+```
+Guidelines live in `docs/idiomatic-go.md`; treat it as required reading. Key points:
+- Always run the app inside tmux; tests that touch tmux spawn/destroy their own sessions.
+- Run `gofumpt`, `golangci-lint`, and `govulncheck` before opening a PR.
+- Table-driven tests go beside their packages (`*_test.go`); fixtures live under `testdata/`.
+
+## Roadmap (short list)
+- Theming + palette customization (Catppuccin/Dracula).
+- Configurable capture depth & poll interval via config file.
+- Pane interaction history and saved layouts.
 
 ## License
 Released under the [MIT License](./LICENSE).
