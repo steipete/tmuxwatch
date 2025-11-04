@@ -74,6 +74,7 @@ type cardBounds struct {
 	closeLine    int
 	closeTop     int
 	closeBottom  int
+	closePrefix  int
 	marginTop    int
 	marginBottom int
 }

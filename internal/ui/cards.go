@@ -11,6 +11,14 @@ import (
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
 
+func closePrefix(header string) int {
+	idx := strings.LastIndex(header, closeLabel)
+	if idx < 0 {
+		return 0
+	}
+	return ansi.StringWidth(header[:idx])
+}
+
 // renderSessionPreviews lays out each visible session card with consistent
 // sizing and mouse hit-test metadata.
 func (m *Model) renderSessionPreviews(offset int) string {
@@ -99,37 +107,13 @@ func (m *Model) renderSessionPreviews(offset int) string {
 			effectiveHeight = height
 		}
 
-		colIndex := idx % cols
-		left := colIndex * cellWidth
-		cardLeft := left + marginLeft
-		cardWidth := effectiveWidth
-		cardHeight := effectiveHeight
-
-		closeLeft := cardLeft
-		closeRight := cardLeft
-		closeLine := 1
-
-		lines := strings.Split(card, "\n")
-		for lineIndex, line := range lines {
-			idx := strings.Index(line, closeLabel)
-			if idx < 0 {
-				continue
-			}
-			prefixWidth := ansi.StringWidth(line[:idx])
-			closeLeft = cardLeft + prefixWidth
-			closeRight = closeLeft + lipgloss.Width(closeLabel) - 1
-			closeLine = lineIndex
-			break
-		}
-
 		bounds := cardBounds{
 			sessionID:    session.ID,
-			left:         cardLeft,
-			width:        cardWidth,
-			closeLeft:    closeLeft,
-			closeRight:   closeRight,
-			closeLine:    closeLine,
-			height:       cardHeight,
+			left:         (idx%cols)*cellWidth + marginLeft,
+			width:        effectiveWidth,
+			closeLine:    1,
+			closePrefix:  closePrefix(headerContent),
+			height:       effectiveHeight,
 			marginTop:    marginTop,
 			marginBottom: marginBottom,
 		}
@@ -165,8 +149,10 @@ func (m *Model) renderSessionPreviews(offset int) string {
 					card.height = rowHeight
 				}
 			}
-			card.closeTop = card.top + card.closeLine
-			card.closeBottom = card.closeTop
+			card.closeTop = card.top
+			card.closeBottom = card.top + card.closeLine
+			card.closeLeft = card.left + card.closePrefix
+			card.closeRight = card.closeLeft + lipgloss.Width(closeLabel) - 1
 			layoutIdx++
 		}
 		rendered = append(rendered, rowStr)
