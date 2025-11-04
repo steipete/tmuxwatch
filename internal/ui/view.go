@@ -23,7 +23,7 @@ func (m *Model) View() string {
 		offset += lipgloss.Height(summary)
 	}
 
-	sections = append(sections, lipgloss.NewStyle().Render(""))
+	sections = append(sections, lipgloss.NewStyle().Width(max(m.width, 1)).Render(" "))
 	offset++
 
 	previews := m.renderSessionPreviews(offset)
