@@ -48,7 +48,7 @@ func (m *Model) updatePreviewDimensions(count int) {
 	if offset <= 0 || offset >= m.height {
 		offset = topPaddingLines
 	}
-	footerHeight := max(1, m.footerHeight) + 1
+	footerHeight := max(1, m.footerHeight) + gridVerticalReserve
 	availableHeight := m.height - offset - footerHeight
 	if availableHeight < minPreviewHeight {
 		availableHeight = minPreviewHeight

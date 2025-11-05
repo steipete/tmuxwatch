@@ -7,7 +7,10 @@ import (
 	"strings"
 )
 
-const topPaddingLines = 0
+const (
+	topPaddingLines     = 0
+	gridVerticalReserve = 5
+)
 
 // View renders the entire tmuxwatch interface, including title bar, search
 // state, session previews, status footer, and overlays.
@@ -41,7 +44,7 @@ func (m *Model) View() string {
 	m.footerHeight = max(1, countLines(status))
 	m.updatePreviewDimensions(m.filteredSessionCount())
 
-	gridLimit := max(1, targetHeight-headerHeight-m.footerHeight-2)
+	gridLimit := max(1, targetHeight-headerHeight-m.footerHeight-gridVerticalReserve)
 	gridContent := clampHeight(m.renderSessionPreviews(headerHeight), gridLimit)
 	if gridContent == "" {
 		gridContent = lipgloss.NewStyle().Padding(1, 2).Render("No sessions to display.")

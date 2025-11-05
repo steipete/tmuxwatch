@@ -4,6 +4,7 @@ package ui
 import (
 	"testing"
 
+	"github.com/charmbracelet/bubbles/v2/viewport"
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
 
@@ -75,5 +76,32 @@ func TestMoveCursorGrid(t *testing.T) {
 	}
 	if m.cursorSession != "$1" {
 		t.Fatalf("cursor = %q, want $1", m.cursorSession)
+	}
+}
+
+// TestUpdatePreviewDimensionsKeepsReserve ensures the viewport height respects
+// the reserved footer spacing so cards do not overlap the footer.
+func TestUpdatePreviewDimensionsKeepsReserve(t *testing.T) {
+	t.Parallel()
+
+	vp := viewport.New(viewport.WithHeight(5), viewport.WithWidth(80))
+	m := &Model{
+		width:        80,
+		height:       30,
+		footerHeight: 3,
+		previews: map[string]*sessionPreview{
+			"s": {viewport: &vp},
+		},
+		previewOffset: 5,
+		viewMode:      viewModeOverview,
+	}
+
+	m.updatePreviewDimensions(1)
+
+	preview := m.previews["s"].viewport
+	available := m.height - m.previewOffset - (max(1, m.footerHeight) + gridVerticalReserve)
+	// Each card adds a 3-line chrome (header + borders) beyond the viewport.
+	if preview.Height()+3 > available {
+		t.Fatalf("card footprint %d exceeds available grid height %d", preview.Height()+3, available)
 	}
 }
