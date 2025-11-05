@@ -41,7 +41,7 @@ func (m *Model) View() string {
 	m.footerHeight = max(1, countLines(status))
 	m.updatePreviewDimensions(m.filteredSessionCount())
 
-	gridLimit := max(1, targetHeight-headerHeight-m.footerHeight-1)
+	gridLimit := max(1, targetHeight-headerHeight-m.footerHeight-2)
 	gridContent := clampHeight(m.renderSessionPreviews(headerHeight), gridLimit)
 	if gridContent == "" {
 		gridContent = lipgloss.NewStyle().Padding(1, 2).Render("No sessions to display.")
@@ -59,6 +59,7 @@ func (m *Model) View() string {
 		lipgloss.Left,
 		header,
 		gridContent,
+		padding,
 		footerView,
 		padding,
 	)
