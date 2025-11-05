@@ -4,7 +4,7 @@
 
 ## Highlights
 - **Live tmux snapshot**: Polls `list-sessions`, `list-windows`, and `list-panes`, stitches the hierarchy together, and shows the latest capture-pane output per session.
-- **Tab-aware layout**: BubbleApp’s tab titles render an Overview/Session strip; `shift+left/right` switches tabs, `ctrl+m` jumps into a full-screen session view, and `esc` returns to the grid.
+- **Tab-aware layout**: The strip lists the grid plus every visible tmux session; click or `shift+left/right` to jump tabs, `ctrl+m` toggles full-screen, and `esc` returns to the grid.
 - **Keyboard & mouse aware**: `/` to search, arrow/PageUp/PageDown to scroll, collapse cards with `z`/`Z`, maximise via `ctrl+m` or the `[^]` control, `X` to kill a focused stale session, `ctrl+X` to clean *all* stale sessions, and mouse clicks/scrolls to focus, collapse, close cards, or switch tabs.
 - **Command palette (`ctrl+P`)**: Run actions (refresh, show hidden, clean stale) from a centered overlay.
 - **Automation friendly**: `--dump` prints the current tmux topology as JSON for scripts or debugging.
