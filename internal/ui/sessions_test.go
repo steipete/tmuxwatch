@@ -1,3 +1,4 @@
+// File sessions_test.go covers helpers that navigate tmux snapshot data.
 package ui
 
 import (
@@ -7,6 +8,7 @@ import (
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
 
+// TestSessionMatches ensures fuzzy queries detect sessions, windows, and panes.
 func TestSessionMatches(t *testing.T) {
 	t.Parallel()
 
@@ -39,6 +41,7 @@ func TestSessionMatches(t *testing.T) {
 	}
 }
 
+// TestActiveWindow confirms the active window is chosen correctly.
 func TestActiveWindow(t *testing.T) {
 	t.Parallel()
 
@@ -57,6 +60,7 @@ func TestActiveWindow(t *testing.T) {
 	}
 }
 
+// TestActivePane confirms pane selection prioritises the active flag.
 func TestActivePane(t *testing.T) {
 	t.Parallel()
 
@@ -75,6 +79,7 @@ func TestActivePane(t *testing.T) {
 	}
 }
 
+// TestSessionAllPanesDead verifies detection of sessions with only dead panes.
 func TestSessionAllPanesDead(t *testing.T) {
 	t.Parallel()
 
@@ -93,6 +98,7 @@ func TestSessionAllPanesDead(t *testing.T) {
 	}
 }
 
+// TestSessionLatestActivity returns the newest timestamp among pane activity.
 func TestSessionLatestActivity(t *testing.T) {
 	t.Parallel()
 
@@ -110,6 +116,7 @@ func TestSessionLatestActivity(t *testing.T) {
 	}
 }
 
+// TestSessionLatestActivityNoTimestamps ensures zero time when panes lack data.
 func TestSessionLatestActivityNoTimestamps(t *testing.T) {
 	t.Parallel()
 

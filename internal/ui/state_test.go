@@ -1,3 +1,4 @@
+// File state_test.go validates tab and collapse state helpers.
 package ui
 
 import (
@@ -6,6 +7,7 @@ import (
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
 
+// TestTabTitles ensures detail tabs appear alongside the overview tab.
 func TestTabTitles(t *testing.T) {
 	t.Parallel()
 
@@ -26,6 +28,7 @@ func TestTabTitles(t *testing.T) {
 	}
 }
 
+// TestSetActiveTabUpdatesViewMode confirms view mode tracks the active tab.
 func TestSetActiveTabUpdatesViewMode(t *testing.T) {
 	t.Parallel()
 
@@ -49,6 +52,7 @@ func TestSetActiveTabUpdatesViewMode(t *testing.T) {
 	}
 }
 
+// TestToggleCollapsed ensures session collapse state toggles predictably.
 func TestToggleCollapsed(t *testing.T) {
 	t.Parallel()
 

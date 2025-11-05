@@ -1,7 +1,9 @@
+// File options_test.go checks parsing of tmux option lines.
 package tmux
 
 import "testing"
 
+// TestParseOptionLine ensures options support quotes, comments, and blanks.
 func TestParseOptionLine(t *testing.T) {
 	t.Parallel()
 

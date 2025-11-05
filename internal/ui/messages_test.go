@@ -1,3 +1,4 @@
+// File messages_test.go exercises toast and formatting helpers.
 package ui
 
 import (
@@ -6,6 +7,7 @@ import (
 	"time"
 )
 
+// TestCenterText verifies helper output is centred within the requested width.
 func TestCenterText(t *testing.T) {
 	t.Parallel()
 
@@ -18,6 +20,7 @@ func TestCenterText(t *testing.T) {
 	}
 }
 
+// TestToastViewActive makes sure active toasts render and persist until expiry.
 func TestToastViewActive(t *testing.T) {
 	t.Parallel()
 
@@ -32,6 +35,7 @@ func TestToastViewActive(t *testing.T) {
 	}
 }
 
+// TestToastViewExpired confirms expired toasts disappear and reset state.
 func TestToastViewExpired(t *testing.T) {
 	t.Parallel()
 

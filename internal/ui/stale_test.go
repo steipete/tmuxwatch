@@ -1,3 +1,4 @@
+// File stale_test.go checks stale detection logic and activity tracking.
 package ui
 
 import (
@@ -7,6 +8,7 @@ import (
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
 
+// TestSessionActivityPrefersSessionTimestamp ensures session timestamps win unless newer preview data exists.
 func TestSessionActivityPrefersSessionTimestamp(t *testing.T) {
 	t.Parallel()
 
@@ -31,6 +33,7 @@ func TestSessionActivityPrefersSessionTimestamp(t *testing.T) {
 	}
 }
 
+// TestUpdateStaleSessionsClearsAfterActivity verifies stale sessions reactivate when new output arrives.
 func TestUpdateStaleSessionsClearsAfterActivity(t *testing.T) {
 	t.Parallel()
 

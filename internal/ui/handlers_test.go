@@ -1,3 +1,4 @@
+// File handlers_test.go validates keyboard and mouse handlers used by the UI.
 package ui
 
 import (
@@ -10,6 +11,7 @@ import (
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
 
+// TestTmuxKeysFrom ensures Bubble Tea key messages map to tmux key strings.
 func TestTmuxKeysFrom(t *testing.T) {
 	t.Parallel()
 
@@ -48,6 +50,7 @@ func TestTmuxKeysFrom(t *testing.T) {
 	}
 }
 
+// TestTabIndexFromZoneIDs checks zone identifiers convert to tab indexes.
 func TestTabIndexFromZoneIDs(t *testing.T) {
 	t.Parallel()
 
@@ -81,6 +84,7 @@ func TestTabIndexFromZoneIDs(t *testing.T) {
 	}
 }
 
+// TestHandleTabMouseClick confirms tab clicks update the active tab state.
 func TestHandleTabMouseClick(t *testing.T) {
 	t.Parallel()
 

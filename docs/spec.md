@@ -1,5 +1,12 @@
 # tmuxwatch Spec
 
+## Migration Status (2025-11-05)
+
+- **UI Framework Refresh**: Bubble Tea/Bubbles/Lip Gloss have been upgraded to their v2 beta line, BubbleZone v2 now powers all hit-testing, and BubbleApp tab titles are integrated. Mouse/tab instability regressions have been triaged; remaining follow-up is to expose BubbleApp tab actions beyond clicks (keyboard focus, palette hooks).
+- **Interaction Model**: Command palette, maximise/detail view, and collapse toggles are live. Mouse targeting uses BubbleZone boundaries throughout, fixing the long-standing "click selects wrong card" bug.
+- **Stale Detection**: Session-level last activity data sourced from tmux plus preview timestamps keeps stale badges accurate; future migration work is to persist activity history for analytics.
+- **Run Tooling**: `gorunfresh` + TMUX guards replace ad-hoc `go run` aliases; Homebrew tap targets version 0.9.
+
 ## Vision
 
 Deliver a tmux companion TUI that gives immediate situational awareness across every session, window, and pane. Users should be able to:

@@ -1,3 +1,4 @@
+// File layout_test.go verifies cursor management within the grid layout.
 package ui
 
 import (
@@ -6,6 +7,7 @@ import (
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
 
+// TestEnsureCursor ensures the cursor tracks visible sessions correctly.
 func TestEnsureCursor(t *testing.T) {
 	t.Parallel()
 
@@ -28,6 +30,7 @@ func TestEnsureCursor(t *testing.T) {
 	}
 }
 
+// TestMoveCursorGrid exercises multi-column cursor navigation helpers.
 func TestMoveCursorGrid(t *testing.T) {
 	t.Parallel()
 

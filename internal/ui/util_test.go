@@ -1,3 +1,4 @@
+// File util_test.go validates miscellaneous utility helpers.
 package ui
 
 import (
@@ -5,6 +6,7 @@ import (
 	"time"
 )
 
+// TestCoarseDuration checks time values render with coarse human strings.
 func TestCoarseDuration(t *testing.T) {
 	t.Parallel()
 
@@ -30,6 +32,7 @@ func TestCoarseDuration(t *testing.T) {
 	}
 }
 
+// TestMax ensures the helper returns the greater of two integers.
 func TestMax(t *testing.T) {
 	t.Parallel()
 

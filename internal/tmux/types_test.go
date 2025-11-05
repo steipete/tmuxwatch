@@ -1,7 +1,9 @@
+// File types_test.go validates helper methods on tmux structs.
 package tmux
 
 import "testing"
 
+// TestPaneTitleOrCmd ensures titles and commands format as expected.
 func TestPaneTitleOrCmd(t *testing.T) {
 	t.Parallel()
 
@@ -38,6 +40,7 @@ func TestPaneTitleOrCmd(t *testing.T) {
 	}
 }
 
+// TestPaneStatusString ensures pane status strings match dead state.
 func TestPaneStatusString(t *testing.T) {
 	t.Parallel()
 

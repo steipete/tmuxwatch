@@ -1,3 +1,4 @@
+// File list_test.go validates helper parsing in the tmux list routines.
 package tmux
 
 import (
@@ -5,6 +6,7 @@ import (
 	"time"
 )
 
+// TestParseUnix ensures numeric strings convert to time correctly.
 func TestParseUnix(t *testing.T) {
 	t.Parallel()
 
@@ -18,6 +20,7 @@ func TestParseUnix(t *testing.T) {
 	}
 }
 
+// TestParseUnixEmpty confirms blank values return zero time.
 func TestParseUnixEmpty(t *testing.T) {
 	t.Parallel()
 
@@ -30,6 +33,7 @@ func TestParseUnixEmpty(t *testing.T) {
 	}
 }
 
+// TestParseUnixInvalid verifies invalid input errors out.
 func TestParseUnixInvalid(t *testing.T) {
 	t.Parallel()
 
