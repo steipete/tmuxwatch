@@ -124,7 +124,7 @@ func emptyStateView(width int) string {
 		width = 40
 	}
 	message := "No tmux sessions detected."
-	helper := "Start one with `tmux new -s demo` or run `./scripts/run-fresh.sh`."
+	helper := "Start one with `tmux new -s demo`."
 	box := lipgloss.JoinVertical(lipgloss.Left, message, helper)
 	styled := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder()).
