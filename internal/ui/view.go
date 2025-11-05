@@ -27,6 +27,8 @@ func (m *Model) View() string {
 	title := renderTitleBar(m)
 	sections = append(sections, title)
 	offset += lipgloss.Height(title)
+	sections = append(sections, padding)
+	offset++
 	if m.searching {
 		search := renderSearchBar(m.searchInput)
 		sections = append(sections, search)
