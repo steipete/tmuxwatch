@@ -38,12 +38,15 @@ func TestClampHeight(t *testing.T) {
 func TestEmptyStateView(t *testing.T) {
 	t.Parallel()
 
-	view := emptyStateView(60)
+	view := emptyStateView(60, 10)
 	if !strings.Contains(view, "No tmux sessions detected.") {
 		t.Fatalf("empty state missing headline: %q", view)
 	}
 	if !strings.Contains(view, "tmux new -s demo") {
 		t.Fatalf("empty state missing helper: %q", view)
+	}
+	if got := countLines(view); got != 10 {
+		t.Fatalf("expected 10 lines for centered placement, got %d", got)
 	}
 }
 

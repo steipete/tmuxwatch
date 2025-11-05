@@ -19,6 +19,7 @@ func TestIsNoServerError(t *testing.T) {
 		{"exit without hint", &exec.ExitError{}, false},
 		{"exit with failed message", &exec.ExitError{Stderr: []byte("failed to connect to server\n")}, true},
 		{"exit with no server message", &exec.ExitError{Stderr: []byte("no server running on /tmp/tmux-1000/default")}, true},
+		{"exit with error connecting message", &exec.ExitError{Stderr: []byte("error connecting to /private/tmp/tmux-501/default")}, true},
 		{"wrapped error", fmt.Errorf("wrapper: %w", &exec.ExitError{Stderr: []byte("failed to connect to server")}), true},
 		{"plain error string", errors.New("no server running"), true},
 	}

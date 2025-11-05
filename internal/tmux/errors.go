@@ -9,6 +9,7 @@ import (
 var noServerHints = []string{
 	"failed to connect to server",
 	"no server running",
+	"error connecting to",
 }
 
 func isNoServerError(err error) bool {

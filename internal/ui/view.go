@@ -54,10 +54,11 @@ func (m *Model) View() string {
 	availableHeight := max(0, targetHeight-headerHeight-m.footerHeight-separatorHeight-gridSpacing)
 	gridContent := m.renderSessionPreviews(headerHeight)
 	if gridContent == "" {
-		gridContent = emptyStateView(targetWidth)
+		gridContent = emptyStateView(targetWidth, availableHeight)
+	} else {
+		gridContent = clampHeight(gridContent, availableHeight)
+		gridContent = placeGridContent(gridContent, targetWidth, availableHeight)
 	}
-	gridContent = clampHeight(gridContent, availableHeight)
-	gridContent = placeGridContent(gridContent, targetWidth, availableHeight)
 
 	footerView := status
 	if m.footer != nil {
@@ -128,7 +129,7 @@ func clampHeight(content string, limit int) string {
 	return content[:consumed]
 }
 
-func emptyStateView(width int) string {
+func emptyStateView(width, height int) string {
 	if width <= 0 {
 		width = 40
 	}
@@ -142,7 +143,12 @@ func emptyStateView(width int) string {
 		Foreground(lipgloss.Color("252")).
 		Render(box)
 
-	return lipgloss.PlaceHorizontal(max(width, lipgloss.Width(styled)), lipgloss.Center, styled)
+	maxWidth := max(width, lipgloss.Width(styled))
+	if height <= 0 {
+		return lipgloss.PlaceHorizontal(maxWidth, lipgloss.Center, styled)
+	}
+	maxHeight := max(height, countLines(styled))
+	return lipgloss.Place(maxWidth, maxHeight, lipgloss.Center, lipgloss.Center, styled)
 }
 
 func placeGridContent(content string, width, height int) string {
