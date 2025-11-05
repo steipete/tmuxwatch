@@ -10,6 +10,11 @@
 
 ## Install & Run
 ```sh
+# Homebrew (recommended once the tap is updated after each release)
+brew tap steipete/tap
+brew install tmuxwatch
+
+# Or install directly with Go tooling
 go install github.com/steipete/tmuxwatch/cmd/tmuxwatch@latest
 
 # best practice: spawn inside tmux so key bindings work as expected

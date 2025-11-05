@@ -18,7 +18,7 @@ import (
 	"github.com/steipete/tmuxwatch/internal/ui"
 )
 
-var version = "dev"
+var version = "1.0.0"
 
 // main configures the tmux client, handles flag modes, and launches Bubble Tea.
 func main() {

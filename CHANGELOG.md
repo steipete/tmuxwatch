@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Nothing yet.
+
+## [1.0.0] - 2025-11-05
+
 - Initial implementation of the `tmuxwatch` CLI with Bubble Tea interface.
 - tmux session/window/pane polling and auto-refresh.
 - Added debug `--dump` mode for printing snapshots and hardened tmux timestamp parsing to accept missing data.
