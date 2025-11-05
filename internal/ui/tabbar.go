@@ -2,6 +2,8 @@
 package ui
 
 import (
+	"strings"
+
 	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/alexanderbh/bubbleapp/component/tabtitles"
 	zone "github.com/alexanderbh/bubblezone/v2"
@@ -35,5 +37,9 @@ func (r *tabRenderer) Render(titles []string, active int) string {
 	}
 	bubble := app.New(ctx, root)
 	view, _ := bubble.View()
+	if strings.Contains(view, "\n") {
+		collapsed := strings.Join(strings.Split(view, "\n"), " ")
+		return collapsed
+	}
 	return view
 }
