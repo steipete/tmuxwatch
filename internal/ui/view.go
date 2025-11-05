@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	topPaddingLines     = 0
-	gridVerticalReserve = 5
+	topPaddingLines = 0
 )
 
 // View renders the entire tmuxwatch interface, including title bar, search
@@ -45,11 +44,13 @@ func (m *Model) View() string {
 	m.footerHeight = max(1, countLines(status))
 	m.updatePreviewDimensions(m.filteredSessionCount())
 
-	gridLimit := max(1, targetHeight-headerHeight-m.footerHeight-gridVerticalReserve)
-	gridContent := clampHeight(m.renderSessionPreviews(headerHeight), gridLimit)
+	availableHeight := max(0, targetHeight-headerHeight-m.footerHeight)
+	gridContent := m.renderSessionPreviews(headerHeight)
 	if gridContent == "" {
 		gridContent = emptyStateView(targetWidth)
 	}
+	gridContent = clampHeight(gridContent, availableHeight)
+	gridContent = placeGridContent(gridContent, targetWidth, availableHeight)
 
 	footerView := status
 	if m.footer != nil {
@@ -129,4 +130,14 @@ func emptyStateView(width int) string {
 		Render(box)
 
 	return lipgloss.PlaceHorizontal(max(width, lipgloss.Width(styled)), lipgloss.Center, styled)
+}
+
+func placeGridContent(content string, width, height int) string {
+	if height <= 0 {
+		return ""
+	}
+	if width <= 0 {
+		width = 1
+	}
+	return lipgloss.Place(width, height, lipgloss.Left, lipgloss.Top, content, lipgloss.WithWhitespaceChars(" "))
 }

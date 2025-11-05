@@ -99,7 +99,7 @@ func TestUpdatePreviewDimensionsKeepsReserve(t *testing.T) {
 	m.updatePreviewDimensions(1)
 
 	preview := m.previews["s"].viewport
-	available := m.height - m.previewOffset - (max(1, m.footerHeight) + gridVerticalReserve)
+	available := m.height - m.previewOffset - max(1, m.footerHeight)
 	// Each card adds a 3-line chrome (header + borders) beyond the viewport.
 	if preview.Height()+3 > available {
 		t.Fatalf("card footprint %d exceeds available grid height %d", preview.Height()+3, available)

@@ -46,3 +46,19 @@ func TestEmptyStateView(t *testing.T) {
 		t.Fatalf("empty state missing helper: %q", view)
 	}
 }
+
+func TestPlaceGridContent(t *testing.T) {
+	t.Parallel()
+
+	view := placeGridContent("a\nb", 20, 4)
+	if countLines(view) != 4 {
+		t.Fatalf("expected 4 lines, got %d", countLines(view))
+	}
+	if !strings.Contains(view, "a") {
+		t.Fatalf("placed view missing content: %q", view)
+	}
+
+	if got := placeGridContent("irrelevant", 10, 0); got != "" {
+		t.Fatalf("expected empty string for zero height, got %q", got)
+	}
+}
