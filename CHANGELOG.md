@@ -6,7 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-- Nothing yet.
+- Added keyboard navigation for session cards (arrow keys + Enter) and a double-Esc chord to exit focus.
+- Documented the Homebrew installation workflow in the README.
 
 ## [0.9] - 2025-11-05
 
