@@ -13,7 +13,7 @@ import (
 // tabTitles derives the current tab titles based on overview and detail state.
 var (
 	tabActiveStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color(headerColorBase)).
+		Foreground(lipgloss.Color("231")).
 		Background(lipgloss.Color("62")).
 		Bold(true).
 		Padding(0, 1).
