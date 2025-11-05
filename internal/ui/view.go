@@ -3,8 +3,8 @@ package ui
 
 import (
 	zone "github.com/alexanderbh/bubblezone/v2"
-	"github.com/charmbracelet/bubbles/v2/viewport"
 	"github.com/charmbracelet/lipgloss/v2"
+	"strings"
 )
 
 const topPaddingLines = 0
@@ -37,34 +37,28 @@ func (m *Model) View() string {
 	headerHeight := max(1, countLines(header))
 	m.previewOffset = headerHeight
 
-	gridContent := m.renderSessionPreviews(headerHeight)
+	status := m.renderStatus()
+	m.footerHeight = max(1, countLines(status))
+	m.updatePreviewDimensions(m.filteredSessionCount())
+
+	gridLimit := max(1, targetHeight-headerHeight-m.footerHeight)
+	gridContent := clampHeight(m.renderSessionPreviews(headerHeight), gridLimit)
 	if gridContent == "" {
 		gridContent = lipgloss.NewStyle().Padding(1, 2).Render("No sessions to display.")
 	}
 
-	status := m.renderStatus()
-	cardHeight := max(1, targetHeight-headerHeight-max(1, m.footerHeight+1))
-	grid := viewport.New(viewport.WithHeight(cardHeight), viewport.WithWidth(targetWidth))
-	grid.MouseWheelEnabled = false
-	grid.SetContent(gridContent)
-
-	var footerView string
+	footerView := status
 	if m.footer != nil {
 		m.footer.SetWidth(targetWidth)
-		height := max(1, countLines(status))
-		m.footer.SetHeight(height)
+		m.footer.SetHeight(m.footerHeight)
 		m.footer.SetContent(status)
-		m.footerHeight = height
 		footerView = m.footer.View()
-	} else {
-		m.footerHeight = max(1, countLines(status))
-		footerView = status
 	}
 
 	view := lipgloss.JoinVertical(
 		lipgloss.Left,
 		header,
-		grid.View(),
+		gridContent,
 		footerView,
 	)
 	view = lipgloss.Place(targetWidth, targetHeight, lipgloss.Left, lipgloss.Top, view)
@@ -86,4 +80,15 @@ func (m *Model) View() string {
 	offsetY := max((height-paletteHeight)/2, 0)
 
 	return zone.Scan(overlayView(view, palette, width, height, offsetX, offsetY))
+}
+
+func clampHeight(content string, limit int) string {
+	if limit <= 0 {
+		return ""
+	}
+	lines := strings.Split(content, "\n")
+	if len(lines) <= limit {
+		return content
+	}
+	return strings.Join(lines[:limit], "\n")
 }
