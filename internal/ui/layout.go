@@ -53,7 +53,12 @@ func (m *Model) updatePreviewDimensions(count int) {
 	if availableHeight < minPreviewHeight {
 		availableHeight = minPreviewHeight
 	}
-	innerHeight := max(minPreviewHeight, availableHeight/max(1, rows))
+	frameHeight := 3 // header + top/bottom border
+	bodyBudget := availableHeight - rows*frameHeight
+	if bodyBudget < rows {
+		bodyBudget = rows
+	}
+	innerHeight := max(1, bodyBudget/max(1, rows))
 	innerWidth := max(20, (m.width/cols)-(cardPadding*2+2))
 	for _, preview := range m.previews {
 		if preview.viewport != nil {
