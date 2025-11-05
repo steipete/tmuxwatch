@@ -49,7 +49,7 @@ func (m *Model) updatePreviewDimensions(count int) {
 		offset = topPaddingLines
 	}
 	footerHeight := max(1, m.footerHeight)
-	availableHeight := m.height - offset - footerHeight - gridSpacing
+	availableHeight := m.height - offset - footerHeight
 	if availableHeight < minPreviewHeight {
 		availableHeight = minPreviewHeight
 	}
@@ -59,6 +59,9 @@ func (m *Model) updatePreviewDimensions(count int) {
 		bodyBudget = rows
 	}
 	innerHeight := max(1, bodyBudget/max(1, rows))
+	if innerHeight > 1 {
+		innerHeight--
+	}
 	innerWidth := max(20, (m.width/cols)-(cardPadding*2+2))
 	for _, preview := range m.previews {
 		if preview.viewport != nil {

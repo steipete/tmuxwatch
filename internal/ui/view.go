@@ -10,7 +10,6 @@ import (
 
 const (
 	topPaddingLines = 0
-	gridSpacing     = 1
 )
 
 // View renders the entire tmuxwatch interface, including title bar, search
@@ -51,7 +50,7 @@ func (m *Model) View() string {
 		separatorHeight = 1
 		separator = lipgloss.NewStyle().Width(targetWidth).Render("")
 	}
-	availableHeight := max(0, targetHeight-headerHeight-m.footerHeight-separatorHeight-gridSpacing)
+	availableHeight := max(0, targetHeight-headerHeight-m.footerHeight-separatorHeight)
 	gridContent := m.renderSessionPreviews(headerHeight)
 	if gridContent == "" {
 		gridContent = emptyStateView(targetWidth)
@@ -67,15 +66,7 @@ func (m *Model) View() string {
 		footerView = m.footer.View()
 	}
 
-	filler := ""
-	if gridSpacing > 0 && targetHeight > headerHeight+m.footerHeight+separatorHeight {
-		filler = lipgloss.NewStyle().Width(targetWidth).Height(gridSpacing).Render("")
-	}
-
 	segments := []string{header, gridContent}
-	if filler != "" {
-		segments = append(segments, filler)
-	}
 	if separatorHeight > 0 {
 		segments = append(segments, separator)
 	}
