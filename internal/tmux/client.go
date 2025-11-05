@@ -10,6 +10,13 @@ import (
 	"time"
 )
 
+var (
+	execCommand = func(ctx context.Context, name string, args ...string) *exec.Cmd {
+		return exec.CommandContext(ctx, name, args...)
+	}
+	lookPath = exec.LookPath
+)
+
 // Client wraps a tmux binary path and exposes high-level snapshot helpers.
 type Client struct {
 	bin string
@@ -20,9 +27,9 @@ type Client struct {
 func NewClient(tmuxPath string) (*Client, error) {
 	if tmuxPath == "" {
 		var err error
-		tmuxPath, err = exec.LookPath("tmux")
+		tmuxPath, err = lookPath("tmux")
 		if err != nil {
-			return nil, fmt.Errorf("tmux not found in PATH: %w", err)
+			return nil, fmt.Errorf("tmux not found in PATH (install tmux >=3.1): %w", err)
 		}
 	}
 	return &Client{bin: tmuxPath}, nil

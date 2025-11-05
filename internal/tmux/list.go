@@ -6,17 +6,23 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"os/exec"
 	"strconv"
 	"strings"
 	"time"
 )
 
+var runCommand = func(ctx context.Context, bin string, args ...string) ([]byte, error) {
+	cmd := execCommand(ctx, bin, args...)
+	if cmd == nil {
+		return nil, fmt.Errorf("execCommand returned nil")
+	}
+	return cmd.Output()
+}
+
 // listSessions shells out to tmux to enumerate sessions and translate them
 // into typed Session values.
 func (c *Client) listSessions(ctx context.Context) ([]Session, error) {
-	cmd := exec.CommandContext(ctx, c.bin, "list-sessions", "-F", "#{session_id}\t#{session_name}\t#{session_attached}\t#{session_created}\t#{session_activity}")
-	out, err := cmd.Output()
+	out, err := runCommand(ctx, c.bin, "list-sessions", "-F", "#{session_id}\t#{session_name}\t#{session_attached}\t#{session_created}\t#{session_activity}")
 	if err != nil {
 		if isNoServerError(err) {
 			return []Session{}, nil
@@ -61,8 +67,7 @@ func (c *Client) listSessions(ctx context.Context) ([]Session, error) {
 // listWindows retrieves every window in every session so we can later nest
 // panes under them.
 func (c *Client) listWindows(ctx context.Context) ([]Window, error) {
-	cmd := exec.CommandContext(ctx, c.bin, "list-windows", "-a", "-F", "#{session_id}\t#{window_id}\t#{window_index}\t#{window_name}\t#{window_active}\t#{window_last_flag}")
-	out, err := cmd.Output()
+	out, err := runCommand(ctx, c.bin, "list-windows", "-a", "-F", "#{session_id}\t#{window_id}\t#{window_index}\t#{window_name}\t#{window_active}\t#{window_last_flag}")
 	if err != nil {
 		if isNoServerError(err) {
 			return []Window{}, nil
@@ -119,8 +124,7 @@ func (c *Client) listPanes(ctx context.Context) ([]Pane, error) {
 		"#{pane_dead_status}",
 	}, "\t")
 
-	cmd := exec.CommandContext(ctx, c.bin, "list-panes", "-a", "-F", format)
-	out, err := cmd.Output()
+	out, err := runCommand(ctx, c.bin, "list-panes", "-a", "-F", format)
 	if err != nil {
 		if isNoServerError(err) {
 			return []Pane{}, nil
