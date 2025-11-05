@@ -59,6 +59,7 @@ func (m *Model) handlePaletteKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// buildCommandItems constructs the available palette actions based on state.
 func (m *Model) buildCommandItems() []commandItem {
 	var items []commandItem
 
@@ -138,6 +139,7 @@ func (m *Model) buildCommandItems() []commandItem {
 	return items
 }
 
+// renderCommandPalette draws the palette overlay content with selection state.
 func (m *Model) renderCommandPalette() string {
 	title := lipgloss.NewStyle().
 		Bold(true).

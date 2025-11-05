@@ -1,3 +1,4 @@
+// File debug.go collects optional tracing helpers for mouse and layout data.
 package ui
 
 import (
@@ -8,6 +9,7 @@ import (
 	zone "github.com/lrstanley/bubblezone"
 )
 
+// logMouseEvent prints mouse hit testing diagnostics when trace mode is on.
 func (m *Model) logMouseEvent(msg tea.MouseMsg, card cardBounds, ok bool) {
 	if !m.traceMouse {
 		return
@@ -23,6 +25,7 @@ func (m *Model) logMouseEvent(msg tea.MouseMsg, card cardBounds, ok bool) {
 	fmt.Fprintf(os.Stderr, "[mouse] action=%v button=%v pos=(%d,%d) -> %s\n", msg.Action, msg.Button, msg.X, msg.Y, result)
 }
 
+// logCardLayout dumps the latest card layout boundaries for bubblezone debug.
 func (m *Model) logCardLayout() {
 	if !m.traceMouse {
 		return

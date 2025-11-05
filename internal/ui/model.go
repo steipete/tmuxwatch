@@ -115,6 +115,8 @@ type Model struct {
 	lastCtrlC    time.Time
 }
 
+// sessionLabel strips leading sigils from tmux session identifiers for
+// friendlier display.
 func sessionLabel(id string) string {
 	if len(id) > 1 && id[0] == '$' {
 		return id[1:]

@@ -1,3 +1,5 @@
+// File overlay.go blends base views with overlays such as the command
+// palette.
 package ui
 
 import (
@@ -8,6 +10,7 @@ import (
 	"github.com/charmbracelet/x/cellbuf"
 )
 
+// overlayView combines a base view with an overlay using the provided offsets.
 func overlayView(base, overlay string, width, height, offsetX, offsetY int) string {
 	baseWidth := lipgloss.Width(base)
 	baseHeight := countLines(base)
@@ -58,6 +61,7 @@ func overlayView(base, overlay string, width, height, offsetX, offsetY int) stri
 	return strings.ReplaceAll(out, "\r\n", "\n")
 }
 
+// countLines counts newline-separated lines within the rendered content.
 func countLines(str string) int {
 	if str == "" {
 		return 1

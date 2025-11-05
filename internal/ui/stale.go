@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// updateStaleSessions recalculates which sessions qualify as stale.
 func (m *Model) updateStaleSessions() {
 	for k := range m.stale {
 		delete(m.stale, k)
@@ -26,11 +27,13 @@ func (m *Model) updateStaleSessions() {
 	}
 }
 
+// isStale reports whether the provided session identifier is marked stale.
 func (m *Model) isStale(sessionID string) bool {
 	_, ok := m.stale[sessionID]
 	return ok
 }
 
+// staleSessionNames returns sorted human-readable names for stale sessions.
 func (m *Model) staleSessionNames() []string {
 	if len(m.stale) == 0 {
 		return nil
@@ -45,6 +48,7 @@ func (m *Model) staleSessionNames() []string {
 	return names
 }
 
+// staleSessionIDs returns sorted identifiers for stale sessions.
 func (m *Model) staleSessionIDs() []string {
 	if len(m.stale) == 0 {
 		return nil

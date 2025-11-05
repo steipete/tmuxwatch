@@ -55,6 +55,7 @@ func activePane(window tmux.Window) (tmux.Pane, bool) {
 	return tmux.Pane{}, false
 }
 
+// sessionAllPanesDead reports whether every pane in the session has exited.
 func sessionAllPanesDead(session tmux.Session) bool {
 	found := false
 	for _, window := range session.Windows {
@@ -68,6 +69,8 @@ func sessionAllPanesDead(session tmux.Session) bool {
 	return found
 }
 
+// sessionLatestActivity returns the most recent activity timestamp within a
+// session.
 func sessionLatestActivity(session tmux.Session) time.Time {
 	latest := session.CreatedAt
 	for _, window := range session.Windows {

@@ -1,3 +1,4 @@
+// File cards.go renders session preview cards and their visual chrome.
 package ui
 
 import (
