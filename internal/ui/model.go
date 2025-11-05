@@ -3,6 +3,7 @@
 package ui
 
 import (
+	"os"
 	"time"
 
 	zone "github.com/alexanderbh/bubblezone/v2"
@@ -136,6 +137,7 @@ type Model struct {
 
 	debugMsgs  []tea.Msg
 	traceMouse bool
+	hostname   string
 
 	lastUpdated time.Time
 	err         error
@@ -182,7 +184,16 @@ func NewModel(client *tmux.Client, poll time.Duration, debugMsgs []tea.Msg, trac
 		toast:         &toastState{},
 		viewMode:      viewModeOverview,
 		tabSessionIDs: make([]string, 0),
+		hostname:      lookupHostname(),
 	}
+}
+
+func lookupHostname() string {
+	h, err := os.Hostname()
+	if err != nil {
+		return ""
+	}
+	return h
 }
 
 // Init starts the initial tmux snapshot fetch and ticking loop.

@@ -106,7 +106,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		controlSegments = append(controlSegments, zone.Mark(closeID, closeContent))
 		controls := strings.Join(controlSegments, " ")
 
-		header := lipgloss.NewStyle().Render(formatHeader(innerWidth, session, window, pane, focused, pulsing, stale, cursor, controls))
+		header := lipgloss.NewStyle().Render(formatHeader(innerWidth, session, window, pane, focused, pulsing, stale, cursor, controls, m.hostname))
 		body := preview.viewport.View()
 		if m.isCollapsed(session.ID) {
 			body = ""
@@ -165,7 +165,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 
 // formatHeader builds the label line for a session card, colouring it based on
 // status and focus state.
-func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux.Pane, focused, pulsing, stale, cursor bool, controls string) string {
+func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux.Pane, focused, pulsing, stale, cursor bool, controls string, host string) string {
 	var meta []string
 	if pane.Dead {
 		meta = append(meta, pane.StatusString())
@@ -173,7 +173,15 @@ func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux
 	if !pane.LastActivity.IsZero() {
 		meta = append(meta, fmt.Sprintf("last %s", coarseDuration(time.Since(pane.LastActivity))))
 	}
-	label := fmt.Sprintf("%s · %s · %s", session.Name, window.Name, pane.TitleOrCmd())
+	titleParts := []string{session.Name, window.Name}
+	paneLabel := strings.TrimSpace(pane.TitleOrCmd())
+	if host != "" && strings.EqualFold(strings.TrimSpace(paneLabel), strings.TrimSpace(host)) {
+		paneLabel = ""
+	}
+	if paneLabel != "" {
+		titleParts = append(titleParts, paneLabel)
+	}
+	label := strings.Join(titleParts, " · ")
 	if stale {
 		meta = append(meta, "stale")
 	}
