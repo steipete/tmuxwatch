@@ -25,12 +25,14 @@ const (
 	borderColorBase     = "62"
 	borderColorFocus    = "212"
 	borderColorPulse    = "213"
+	borderColorCursor   = "111"
 	borderColorExitFail = "203"
 	borderColorExitOK   = "36"
 	borderColorStale    = "95"
 	headerColorBase     = "249"
 	headerColorFocus    = "212"
 	headerColorPulse    = "219"
+	headerColorCursor   = "111"
 	headerColorExitFail = "203"
 	headerColorExitOK   = "37"
 	headerColorStale    = "103"
@@ -103,6 +105,8 @@ type Model struct {
 
 	focusedSession string
 	cardLayout     []cardBounds
+	cursorSession  string
+	cardCols       int
 
 	debugMsgs  []tea.Msg
 	traceMouse bool
@@ -113,6 +117,7 @@ type Model struct {
 
 	cachedStatus string
 	lastCtrlC    time.Time
+	lastEsc      time.Time
 }
 
 // sessionLabel strips leading sigils from tmux session identifiers for
@@ -142,6 +147,7 @@ func NewModel(client *tmux.Client, poll time.Duration, debugMsgs []tea.Msg, trac
 		stale:        make(map[string]struct{}),
 		searchInput:  ti,
 		cardLayout:   make([]cardBounds, 0),
+		cardCols:     1,
 		inflight:     true,
 		debugMsgs:    append([]tea.Msg(nil), debugMsgs...),
 		traceMouse:   traceMouse,

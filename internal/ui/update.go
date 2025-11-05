@@ -80,6 +80,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.focusedSession == id {
 				m.focusedSession = ""
 			}
+			if m.cursorSession == id {
+				m.cursorSession = ""
+			}
 			delete(m.previews, id)
 			delete(m.hidden, id)
 			delete(m.stale, id)

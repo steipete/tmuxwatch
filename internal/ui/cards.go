@@ -18,6 +18,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 	sessions := m.filteredSessions()
 	m.cardLayout = m.cardLayout[:0]
 	if len(sessions) == 0 {
+		m.cursorSession = ""
 		return ""
 	}
 
@@ -25,6 +26,8 @@ func (m *Model) renderSessionPreviews(offset int) string {
 	if len(sessions) > 1 && m.width >= 70 {
 		cols = 2
 	}
+	m.cardCols = cols
+	m.ensureCursor(sessions)
 	baseStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(borderColorBase)).
@@ -58,12 +61,13 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		pulsing := now.Sub(preview.lastChanged) < pulseDuration
 		stale := m.isStale(session.ID)
 		focused := session.ID == m.focusedSession
+		cursor := session.ID == m.cursorSession
 
 		cardID := fmt.Sprintf("%scard:%s", m.zonePrefix, session.ID)
 		closeID := fmt.Sprintf("%sclose:%s", m.zonePrefix, session.ID)
 
 		close := zone.Mark(closeID, closeLabel)
-		header := lipgloss.NewStyle().Render(formatHeader(innerWidth, session, window, pane, focused, pulsing, stale, close))
+		header := lipgloss.NewStyle().Render(formatHeader(innerWidth, session, window, pane, focused, pulsing, stale, cursor, close))
 		body := preview.viewport.View()
 
 		borderStyle := baseStyle
@@ -72,10 +76,12 @@ func (m *Model) renderSessionPreviews(offset int) string {
 			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorExitFail))
 		case pane.Dead:
 			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorExitOK))
-		case stale:
-			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorStale))
 		case focused:
 			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorFocus))
+		case cursor:
+			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorCursor))
+		case stale:
+			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorStale))
 		case pulsing:
 			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorPulse))
 		}
@@ -113,7 +119,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 
 // formatHeader builds the label line for a session card, colouring it based on
 // status and focus state.
-func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux.Pane, focused, pulsing, stale bool, close string) string {
+func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux.Pane, focused, pulsing, stale, cursor bool, close string) string {
 	var meta []string
 	if pane.Dead {
 		meta = append(meta, pane.StatusString())
@@ -149,10 +155,12 @@ func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux
 		style = style.Foreground(lipgloss.Color(headerColorExitFail))
 	case pane.Dead:
 		style = style.Foreground(lipgloss.Color(headerColorExitOK))
-	case stale:
-		style = style.Foreground(lipgloss.Color(headerColorStale))
 	case focused:
 		style = style.Foreground(lipgloss.Color(headerColorFocus))
+	case cursor:
+		style = style.Foreground(lipgloss.Color(headerColorCursor))
+	case stale:
+		style = style.Foreground(lipgloss.Color(headerColorStale))
 	case pulsing:
 		style = style.Foreground(lipgloss.Color(headerColorPulse))
 	default:

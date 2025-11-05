@@ -15,7 +15,57 @@ import (
 
 // handleGlobalKey processes keys that apply regardless of focus.
 func (m *Model) handleGlobalKey(msg tea.KeyMsg) (bool, tea.Cmd) {
+	if msg.String() != "esc" {
+		m.lastEsc = time.Time{}
+	}
 	switch msg.String() {
+	case "left":
+		if m.focusedSession != "" {
+			return false, nil
+		}
+		if m.moveCursorLeft() {
+			return true, nil
+		}
+		return true, nil
+	case "right":
+		if m.focusedSession != "" {
+			return false, nil
+		}
+		if m.moveCursorRight() {
+			return true, nil
+		}
+		return true, nil
+	case "up":
+		if m.focusedSession != "" {
+			return false, nil
+		}
+		if m.moveCursorUp() {
+			return true, nil
+		}
+		return true, nil
+	case "down":
+		if m.focusedSession != "" {
+			return false, nil
+		}
+		if m.moveCursorDown() {
+			return true, nil
+		}
+		return true, nil
+	case "enter":
+		if m.cursorSession == "" {
+			return true, nil
+		}
+		if m.focusedSession != m.cursorSession {
+			m.focusedSession = m.cursorSession
+			m.resetCtrlC()
+			if preview, ok := m.previews[m.focusedSession]; ok {
+				preview.viewport.GotoBottom()
+				if preview.paneID != "" {
+					return true, fetchPaneVarsCmd(m.client, m.focusedSession, preview.paneID)
+				}
+			}
+		}
+		return true, nil
 	case "/", "ctrl+f":
 		m.resetCtrlC()
 		m.searching = true
@@ -29,7 +79,20 @@ func (m *Model) handleGlobalKey(msg tea.KeyMsg) (bool, tea.Cmd) {
 			m.updatePreviewDimensions(m.filteredSessionCount())
 			return true, nil
 		}
-		return false, nil
+		if m.focusedSession == "" {
+			return false, nil
+		}
+		now := time.Now()
+		if !m.lastEsc.IsZero() && now.Sub(m.lastEsc) < quitChordWindow {
+			previous := m.focusedSession
+			m.focusedSession = ""
+			m.cursorSession = previous
+			m.lastEsc = time.Time{}
+			m.resetCtrlC()
+			return true, nil
+		}
+		m.lastEsc = now
+		return true, nil
 	case "ctrl+p":
 		if m.paletteOpen {
 			m.closePalette()
@@ -184,12 +247,16 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			if m.focusedSession == card.sessionID {
 				m.focusedSession = ""
 			}
+			if m.cursorSession == card.sessionID {
+				m.cursorSession = ""
+			}
 			delete(m.previews, card.sessionID)
 			m.resetCtrlC()
 			m.updatePreviewDimensions(m.filteredSessionCount())
 			return m, showStatusMessage(fmt.Sprintf("Closed session %s", sessionLabel(card.sessionID)))
 		}
 		m.focusedSession = card.sessionID
+		m.cursorSession = card.sessionID
 		m.resetCtrlC()
 		if preview != nil {
 			preview.viewport.GotoBottom()
