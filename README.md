@@ -10,9 +10,14 @@
 
 ## Install & Run
 ```sh
-# Homebrew (recommended once the tap is updated after each release)
+# Homebrew (recommended)
 brew tap steipete/tap
 brew install tmuxwatch
+tmuxwatch --version  # should print tmuxwatch 0.9
+
+# Updating later
+brew update
+brew upgrade tmuxwatch
 
 # Or install directly with Go tooling
 go install github.com/steipete/tmuxwatch/cmd/tmuxwatch@latest
