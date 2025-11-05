@@ -184,6 +184,10 @@ func (m *Model) filteredSessions() []tmux.Session {
 		}
 		m.leaveDetail(true)
 	}
+	return m.filteredSessionsFull()
+}
+
+func (m *Model) filteredSessionsFull() []tmux.Session {
 	var out []tmux.Session
 	query := strings.ToLower(m.searchQuery)
 	for _, session := range m.sessions {

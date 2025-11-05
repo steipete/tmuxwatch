@@ -18,13 +18,12 @@ func TestTabTitles(t *testing.T) {
 	}
 
 	m.sessions = []tmux.Session{{ID: "$1", Name: "dev"}}
-	m.detailSession = "$1"
 	titles = m.tabTitles()
 	if len(titles) != 2 {
 		t.Fatalf("tabTitles() length = %d, want 2", len(titles))
 	}
-	if titles[1] != "Session 1" {
-		t.Fatalf("detail tab title = %q, want Session 1", titles[1])
+	if titles[1] != "dev" {
+		t.Fatalf("session tab title = %q, want dev", titles[1])
 	}
 }
 
@@ -33,17 +32,17 @@ func TestSetActiveTabUpdatesViewMode(t *testing.T) {
 	t.Parallel()
 
 	m := &Model{
-		detailSession: "s1",
-		sessions:      []tmux.Session{{ID: "s1", Name: "dev"}},
+		sessions: []tmux.Session{{ID: "s1", Name: "dev"}},
 	}
+	m.tabTitles()
 	m.setActiveTab(0)
 	if m.viewMode != viewModeOverview {
 		t.Fatalf("viewMode = %v, want overview", m.viewMode)
 	}
 
-	m.enterDetail("s1")
+	m.setActiveTab(1)
 	if m.viewMode != viewModeDetail {
-		t.Fatalf("enterDetail should switch to detail, got %v", m.viewMode)
+		t.Fatalf("setActiveTab(1) should switch to detail, got %v", m.viewMode)
 	}
 
 	m.setActiveTab(0)

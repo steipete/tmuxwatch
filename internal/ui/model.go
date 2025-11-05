@@ -133,6 +133,7 @@ type Model struct {
 	activeTab     int
 	cardCols      int
 	previewOffset int
+	tabSessionIDs []string
 
 	debugMsgs  []tea.Msg
 	traceMouse bool
@@ -182,6 +183,7 @@ func NewModel(client *tmux.Client, poll time.Duration, debugMsgs []tea.Msg, trac
 		toast:         &toastState{},
 		tabRenderer:   newTabRenderer(),
 		viewMode:      viewModeOverview,
+		tabSessionIDs: make([]string, 0),
 	}
 }
 

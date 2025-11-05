@@ -12,13 +12,10 @@ import (
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
 
-func decorateControl(content string, hovered bool) string {
-	if !hovered {
-		return content
-	}
+func decorateControl(label string) string {
 	return lipgloss.NewStyle().
 		Foreground(lipgloss.Color(headerColorFocus)).
-		Render(content)
+		Render(label)
 }
 
 // renderSessionPreviews lays out each visible session card with consistent
@@ -87,10 +84,22 @@ func (m *Model) renderSessionPreviews(offset int) string {
 			collapseDisplay = expandLabel
 		}
 
+		maxContent := maxLabel
+		collapseContent := collapseDisplay
+		closeContent := closeLabel
+		if m.hoveredControl == maxID {
+			maxContent = decorateControl(maxLabel)
+		}
+		if m.hoveredControl == collapseID {
+			collapseContent = decorateControl(collapseDisplay)
+		}
+		if m.hoveredControl == closeID {
+			closeContent = decorateControl(closeLabel)
+		}
 		controlSegments := []string{
-			decorateControl(zone.Mark(maxID, maxLabel), m.hoveredControl == maxID),
-			decorateControl(zone.Mark(collapseID, collapseDisplay), m.hoveredControl == collapseID),
-			decorateControl(zone.Mark(closeID, closeLabel), m.hoveredControl == closeID),
+			zone.Mark(maxID, maxContent),
+			zone.Mark(collapseID, collapseContent),
+			zone.Mark(closeID, closeContent),
 		}
 		controls := strings.Join(controlSegments, " ")
 

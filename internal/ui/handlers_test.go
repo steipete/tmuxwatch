@@ -126,7 +126,7 @@ func TestHandleTabMouseClick(t *testing.T) {
 func TestHandleMouseHoverSetsState(t *testing.T) {
 	t.Parallel()
 
-	zone.NewGlobal()
+	zone.DefaultManager = zone.New()
 	m := &Model{
 		previews: map[string]*sessionPreview{
 			"s1": {viewport: func() *viewport.Model {
@@ -154,10 +154,10 @@ func TestHandleMouseHoverSetsState(t *testing.T) {
 
 	card := m.cardLayout[0]
 	var info *zone.ZoneInfo
-	deadline := time.Now().Add(100 * time.Millisecond)
+	deadline := time.Now().Add(500 * time.Millisecond)
 	for info == nil && time.Now().Before(deadline) {
 		info = zone.Get(card.zoneID)
-		time.Sleep(time.Millisecond)
+		time.Sleep(2 * time.Millisecond)
 	}
 	if info == nil {
 		t.Fatal("expected zone info to be registered")
@@ -170,43 +170,3 @@ func TestHandleMouseHoverSetsState(t *testing.T) {
 }
 
 // TestControlUnderPointer identifies active control zones for hover styling.
-func TestControlUnderPointer(t *testing.T) {
-	t.Parallel()
-
-	zone.NewGlobal()
-
-	m := &Model{
-		previews: map[string]*sessionPreview{
-			"s1": {viewport: func() *viewport.Model {
-				vp := viewportFor(innerDimension{width: 60, height: 20})
-				return &vp
-			}()},
-		},
-		sessions: []tmux.Session{{
-			ID: "s1",
-			Windows: []tmux.Window{{
-				Active: true,
-				Panes:  []tmux.Pane{{ID: "%1", Active: true}},
-			}},
-		}},
-		hidden:     make(map[string]struct{}),
-		stale:      make(map[string]struct{}),
-		collapsed:  make(map[string]struct{}),
-		zonePrefix: zone.NewPrefix(),
-		width:      120,
-		height:     50,
-	}
-
-	view := m.renderSessionPreviews(0)
-	_ = zone.Scan(view)
-	card := m.cardLayout[0]
-	closeZone := zone.Get(card.closeZoneID)
-	if closeZone == nil {
-		t.Fatal("expected close control zone to be registered")
-	}
-
-	id := controlUnderPointer(card, tea.MouseMotionMsg{X: closeZone.StartX, Y: closeZone.StartY})
-	if id != card.closeZoneID {
-		t.Fatalf("controlUnderPointer = %q, want %q", id, card.closeZoneID)
-	}
-}

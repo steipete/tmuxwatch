@@ -6,6 +6,7 @@ import (
 	zone "github.com/alexanderbh/bubblezone/v2"
 	"github.com/charmbracelet/bubbles/v2/viewport"
 	tea "github.com/charmbracelet/bubbletea/v2"
+	"github.com/charmbracelet/lipgloss/v2"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
@@ -48,7 +49,8 @@ func (m *Model) updatePreviewDimensions(count int) {
 	if offset <= 0 || offset >= m.height {
 		offset = topPaddingLines
 	}
-	availableHeight := m.height - offset - 3
+	footerHeight := lipgloss.Height(m.renderStatus()) + 1
+	availableHeight := m.height - offset - footerHeight
 	if availableHeight < minPreviewHeight {
 		availableHeight = minPreviewHeight
 	}

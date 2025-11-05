@@ -1,23 +1,21 @@
 // File state.go manages tab state, detail navigation, and collapse toggles.
 package ui
 
-import (
-	"fmt"
-
-	"github.com/steipete/tmuxwatch/internal/tmux"
-)
+import "github.com/steipete/tmuxwatch/internal/tmux"
 
 // tabTitles derives the current tab titles based on overview and detail state.
 func (m *Model) tabTitles() []string {
-	titles := []string{"Overview"}
-	if m.detailSession != "" {
-		if _, ok := m.sessionByID(m.detailSession); ok {
-			titles = append(titles, fmt.Sprintf("Session %s", sessionLabel(m.detailSession)))
-		} else {
-			m.detailSession = ""
-			m.viewMode = viewModeOverview
-			m.activeTab = 0
+	sessions := m.filteredSessionsFull()
+	titles := make([]string, 1, len(sessions)+1)
+	titles[0] = "Overview"
+	m.tabSessionIDs = m.tabSessionIDs[:0]
+	for _, session := range sessions {
+		m.tabSessionIDs = append(m.tabSessionIDs, session.ID)
+		label := session.Name
+		if label == "" {
+			label = sessionLabel(session.ID)
 		}
+		titles = append(titles, label)
 	}
 	return titles
 }
@@ -57,8 +55,17 @@ func (m *Model) setActiveTab(idx int) {
 	m.activeTab = idx
 	if m.activeTab == 0 {
 		m.viewMode = viewModeOverview
-	} else if m.activeTab == 1 && m.detailSession != "" {
+		return
+	}
+	if m.activeTab-1 < len(m.tabSessionIDs) {
+		sessionID := m.tabSessionIDs[m.activeTab-1]
+		m.detailSession = sessionID
 		m.viewMode = viewModeDetail
+		m.focusedSession = sessionID
+		m.cursorSession = sessionID
+	} else {
+		m.viewMode = viewModeOverview
+		m.activeTab = 0
 	}
 }
 
@@ -72,9 +79,13 @@ func (m *Model) enterDetail(sessionID string) {
 	}
 	m.detailSession = sessionID
 	m.viewMode = viewModeDetail
-	m.activeTab = 1
 	m.focusedSession = sessionID
 	m.cursorSession = sessionID
+	titles := m.tabTitles()
+	_ = titles
+	if idx := m.indexForSession(sessionID); idx > 0 {
+		m.activeTab = idx
+	}
 }
 
 // leaveDetail returns to overview mode and optionally clears detail metadata.
@@ -93,9 +104,19 @@ func (m *Model) handleDetailToggle(sessionID string) {
 	}
 	if m.viewMode == viewModeDetail && m.detailSession == sessionID {
 		m.leaveDetail(true)
+		m.tabTitles()
 		return
 	}
 	m.enterDetail(sessionID)
+}
+
+func (m *Model) indexForSession(id string) int {
+	for i, sessionID := range m.tabSessionIDs {
+		if sessionID == id {
+			return i + 1
+		}
+	}
+	return 0
 }
 
 // sessionByID locates a session by identifier if it exists in the snapshot.
