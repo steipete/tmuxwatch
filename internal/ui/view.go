@@ -58,6 +58,7 @@ func (m *Model) View() string {
 	}
 
 	sections = append(sections, m.renderStatus())
+	sections = append(sections, padding)
 	view := lipgloss.JoinVertical(lipgloss.Left, sections...)
 	view = lipgloss.Place(targetWidth, targetHeight, lipgloss.Left, lipgloss.Top, view)
 
