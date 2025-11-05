@@ -44,7 +44,13 @@ func (m *Model) View() string {
 	m.footerHeight = max(1, countLines(status))
 	m.updatePreviewDimensions(m.filteredSessionCount())
 
-	availableHeight := max(0, targetHeight-headerHeight-m.footerHeight)
+	separatorHeight := 0
+	separator := ""
+	if targetHeight > headerHeight+m.footerHeight {
+		separatorHeight = 1
+		separator = lipgloss.NewStyle().Width(targetWidth).Render("")
+	}
+	availableHeight := max(0, targetHeight-headerHeight-m.footerHeight-separatorHeight)
 	gridContent := m.renderSessionPreviews(headerHeight)
 	if gridContent == "" {
 		gridContent = emptyStateView(targetWidth)
@@ -60,14 +66,12 @@ func (m *Model) View() string {
 		footerView = m.footer.View()
 	}
 
-	view := lipgloss.JoinVertical(
-		lipgloss.Left,
-		header,
-		gridContent,
-		padding,
-		footerView,
-		padding,
-	)
+	segments := []string{header, gridContent}
+	if separatorHeight > 0 {
+		segments = append(segments, separator)
+	}
+	segments = append(segments, footerView)
+	view := lipgloss.JoinVertical(lipgloss.Left, segments...)
 	view = lipgloss.Place(targetWidth, targetHeight, lipgloss.Left, lipgloss.Top, view)
 
 	if m.traceMouse {
