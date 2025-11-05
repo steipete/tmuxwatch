@@ -24,7 +24,7 @@ func (m *Model) buildStatusLine() string {
 	lines := []string{
 		lipgloss.NewStyle().
 			Foreground(lipgloss.Color("245")).
-			Padding(1, 2).
+			Padding(0, 2).
 			Render("mouse: click focus, scroll logs, close [x] · keys: / search, H show hidden, X kill stale, ctrl+X clean all, ctrl+P palette, q quit"),
 	}
 
