@@ -49,7 +49,7 @@ func (m *Model) updatePreviewDimensions(count int) {
 		offset = topPaddingLines
 	}
 	footerHeight := max(1, m.footerHeight)
-	availableHeight := m.height - offset - footerHeight
+	availableHeight := m.height - offset - footerHeight - gridSpacing
 	if availableHeight < minPreviewHeight {
 		availableHeight = minPreviewHeight
 	}
