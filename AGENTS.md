@@ -37,5 +37,5 @@
 - Prefer `gofumpt`+`golangci-lint` for consistency; avoid ad-hoc formatters.
 - When scripting tmux interactions for tests, remember to clean up (`tmux kill-session`) to leave developer sessions untouched.
 - Treat `docs/idiomatic-go.md` as required reading before contributing; follow its 2025 idioms for style, tooling, and testing norms.
-- Use `./gorunfresh` for rebuild-and-run workflows; it enforces running inside tmux and supports `--debug-click` and `--trace-mouse` for BubbleZone debugging.
+- Use `./gorunfresh` for rebuild-and-run workflows; it supports `--debug-click`/`--trace-mouse` for BubbleZone debugging and honours `TMUXWATCH_FORCE_TMUX=1` if you want to require a tmux session.
 - BubbleZone underpins mouse hit-testing (cards, controls, and tab titles); prefer zone-aware helpers/tests instead of manual geometry math.

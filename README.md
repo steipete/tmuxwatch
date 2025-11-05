@@ -26,6 +26,9 @@ go install github.com/steipete/tmuxwatch/cmd/tmuxwatch@latest
 # best practice: spawn inside tmux so key bindings work as expected
 tmux new-session -d -s watch './gorunfresh --trace-mouse'
 tmux attach -t watch
+
+# prefer to run outside tmux?
+./gorunfresh --dump  # runs directly unless TMUXWATCH_FORCE_TMUX=1 is set
 ```
 Press `q` (or double `ctrl+c`) to exit. Prefer running tmuxwatch in its own tmux session to keep the UI isolated from your workspaces. For local development you can substitute `./gorunfresh --debug-click 30,10 --trace-mouse` inside the session to replay a mouse event while inspecting BubbleZone logs.
 
@@ -68,7 +71,7 @@ make lint
 go test ./...
 
 # fresh rebuild & run inside tmux (guards against outside usage)
-./gorunfresh --dump  # validate tmux JSON snapshot from inside tmux
+./gorunfresh --dump  # validate tmux JSON snapshot; respects TMUXWATCH_FORCE_TMUX
 
 go run ./cmd/tmuxwatch --dump  # (inside tmux) validate tmux JSON snapshot for debugging
 ```
