@@ -24,13 +24,6 @@ func (m *Model) View() string {
 	}
 	offset := topPaddingLines
 
-	m.setActiveTab(m.activeTab)
-	tabBar := m.renderTabBar()
-	if tabBar != "" {
-		sections = append(sections, tabBar)
-		offset += lipgloss.Height(tabBar)
-	}
-
 	title := renderTitleBar(m)
 	sections = append(sections, title)
 	offset += lipgloss.Height(title)
@@ -42,6 +35,13 @@ func (m *Model) View() string {
 		summary := renderSearchSummary(m.searchQuery)
 		sections = append(sections, summary)
 		offset += lipgloss.Height(summary)
+	}
+
+	m.setActiveTab(m.activeTab)
+	tabBar := m.renderTabBar()
+	if tabBar != "" {
+		sections = append(sections, tabBar)
+		offset += lipgloss.Height(tabBar)
 	}
 
 	sections = append(sections, padding)
