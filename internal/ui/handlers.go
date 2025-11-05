@@ -275,6 +275,7 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	if len(m.cardLayout) == 0 {
 		if _, motion := msg.(tea.MouseMotionMsg); motion {
 			m.hoveredSession = ""
+			m.hoveredControl = ""
 		}
 		return m, nil
 	}
@@ -283,11 +284,13 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	if !ok {
 		if _, motion := msg.(tea.MouseMotionMsg); motion {
 			m.hoveredSession = ""
+			m.hoveredControl = ""
 		}
 		return m, nil
 	}
 	if _, motion := msg.(tea.MouseMotionMsg); motion {
 		m.hoveredSession = card.sessionID
+		m.hoveredControl = controlUnderPointer(card, msg)
 		return m, nil
 	}
 	preview := m.previews[card.sessionID]
@@ -306,11 +309,13 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	case tea.MouseLeft:
 		if _, click := msg.(tea.MouseClickMsg); click {
 			if info := zone.Get(card.maximizeZoneID); info != nil && info.InBounds(msg) {
+				m.hoveredControl = ""
 				m.handleDetailToggle(card.sessionID)
 				m.updatePreviewDimensions(m.filteredSessionCount())
 				return m, nil
 			}
 			if info := zone.Get(card.collapseZoneID); info != nil && info.InBounds(msg) {
+				m.hoveredControl = ""
 				m.toggleCollapsed(card.sessionID)
 				m.updatePreviewDimensions(m.filteredSessionCount())
 				return m, nil
@@ -326,6 +331,7 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 				if m.hoveredSession == card.sessionID {
 					m.hoveredSession = ""
 				}
+				m.hoveredControl = ""
 				delete(m.previews, card.sessionID)
 				m.resetCtrlC()
 				m.updatePreviewDimensions(m.filteredSessionCount())
@@ -400,6 +406,15 @@ func tabIndexFromZoneIDs(ids []string) (int, bool) {
 		return tabIndex, true
 	}
 	return 0, false
+}
+
+func controlUnderPointer(card cardBounds, msg tea.MouseMsg) string {
+	for _, id := range []string{card.maximizeZoneID, card.collapseZoneID, card.closeZoneID} {
+		if info := zone.Get(id); info != nil && info.InBounds(msg) {
+			return id
+		}
+	}
+	return ""
 }
 
 // handleSearchKey updates the search field when the user is actively editing.

@@ -125,6 +125,7 @@ type Model struct {
 	cardLayout     []cardBounds
 	cursorSession  string
 	hoveredSession string
+	hoveredControl string
 
 	tabRenderer   *tabRenderer
 	viewMode      viewMode
