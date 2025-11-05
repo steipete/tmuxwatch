@@ -6,6 +6,7 @@ import (
 	"time"
 
 	zone "github.com/alexanderbh/bubblezone/v2"
+	"github.com/charmbracelet/bubbles/v2/viewport"
 	tea "github.com/charmbracelet/bubbletea/v2"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
@@ -118,5 +119,52 @@ func TestHandleTabMouseClick(t *testing.T) {
 	}
 	if m.activeTab != 1 {
 		t.Fatalf("activeTab = %d, want 1", m.activeTab)
+	}
+}
+
+// TestHandleMouseHoverSetsState ensures motion tracking highlights the card.
+func TestHandleMouseHoverSetsState(t *testing.T) {
+	t.Parallel()
+
+	zone.NewGlobal()
+	m := &Model{
+		previews: map[string]*sessionPreview{
+			"s1": {viewport: func() *viewport.Model {
+				vp := viewportFor(innerDimension{width: 60, height: 20})
+				return &vp
+			}()},
+		},
+		sessions: []tmux.Session{{
+			ID: "s1",
+			Windows: []tmux.Window{{
+				Active: true,
+				Panes:  []tmux.Pane{{ID: "%1", Active: true}},
+			}},
+		}},
+		hidden:     make(map[string]struct{}),
+		stale:      make(map[string]struct{}),
+		collapsed:  make(map[string]struct{}),
+		zonePrefix: zone.NewPrefix(),
+		width:      120,
+		height:     50,
+	}
+
+	view := m.renderSessionPreviews(0)
+	_ = zone.Scan(view)
+
+	card := m.cardLayout[0]
+	var info *zone.ZoneInfo
+	deadline := time.Now().Add(100 * time.Millisecond)
+	for info == nil && time.Now().Before(deadline) {
+		info = zone.Get(card.zoneID)
+		time.Sleep(time.Millisecond)
+	}
+	if info == nil {
+		t.Fatal("expected zone info to be registered")
+	}
+
+	m.handleMouse(tea.MouseMotionMsg{X: info.StartX, Y: info.StartY})
+	if m.hoveredSession != "s1" {
+		t.Fatalf("hoveredSession = %q, want s1", m.hoveredSession)
 	}
 }

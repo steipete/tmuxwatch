@@ -62,6 +62,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		stale := m.isStale(session.ID)
 		focused := session.ID == m.focusedSession
 		cursor := session.ID == m.cursorSession
+		hovered := session.ID == m.hoveredSession
 
 		cardID := fmt.Sprintf("%scard:%s", m.zonePrefix, session.ID)
 		closeID := fmt.Sprintf("%sclose:%s", m.zonePrefix, session.ID)
@@ -99,6 +100,8 @@ func (m *Model) renderSessionPreviews(offset int) string {
 			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorFocus))
 		case cursor:
 			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorCursor))
+		case hovered:
+			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorHover))
 		case stale:
 			borderStyle = borderStyle.BorderForeground(lipgloss.Color(borderColorStale))
 		case pulsing:

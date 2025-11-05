@@ -273,11 +273,21 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 		return m, cmd
 	}
 	if len(m.cardLayout) == 0 {
+		if _, motion := msg.(tea.MouseMotionMsg); motion {
+			m.hoveredSession = ""
+		}
 		return m, nil
 	}
 	card, ok := m.cardAt(msg)
 	m.logMouseEvent(msg, card, ok)
 	if !ok {
+		if _, motion := msg.(tea.MouseMotionMsg); motion {
+			m.hoveredSession = ""
+		}
+		return m, nil
+	}
+	if _, motion := msg.(tea.MouseMotionMsg); motion {
+		m.hoveredSession = card.sessionID
 		return m, nil
 	}
 	preview := m.previews[card.sessionID]
@@ -286,10 +296,12 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	case tea.MouseWheelDown:
 		if _, wheel := msg.(tea.MouseWheelMsg); wheel && preview != nil {
 			preview.viewport.ScrollDown(scrollStep)
+			m.hoveredSession = card.sessionID
 		}
 	case tea.MouseWheelUp:
 		if _, wheel := msg.(tea.MouseWheelMsg); wheel && preview != nil {
 			preview.viewport.ScrollUp(scrollStep)
+			m.hoveredSession = card.sessionID
 		}
 	case tea.MouseLeft:
 		if _, click := msg.(tea.MouseClickMsg); click {
@@ -311,6 +323,9 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 				if m.cursorSession == card.sessionID {
 					m.cursorSession = ""
 				}
+				if m.hoveredSession == card.sessionID {
+					m.hoveredSession = ""
+				}
 				delete(m.previews, card.sessionID)
 				m.resetCtrlC()
 				m.updatePreviewDimensions(m.filteredSessionCount())
@@ -318,6 +333,7 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 			}
 			m.focusedSession = card.sessionID
 			m.cursorSession = card.sessionID
+			m.hoveredSession = card.sessionID
 			m.resetCtrlC()
 			if preview != nil {
 				preview.viewport.GotoBottom()

@@ -33,6 +33,7 @@ const (
 	borderColorFocus    = "212"
 	borderColorPulse    = "213"
 	borderColorCursor   = "111"
+	borderColorHover    = "143"
 	borderColorExitFail = "203"
 	borderColorExitOK   = "36"
 	borderColorStale    = "95"
@@ -123,6 +124,7 @@ type Model struct {
 	focusedSession string
 	cardLayout     []cardBounds
 	cursorSession  string
+	hoveredSession string
 
 	tabRenderer   *tabRenderer
 	viewMode      viewMode
