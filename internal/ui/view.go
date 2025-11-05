@@ -18,6 +18,7 @@ func (m *Model) View() string {
 	targetWidth := max(m.width, 1)
 	targetHeight := max(m.height, 1)
 	var sections []string
+	// Use a single-cell padding row so we can reuse it when spacing between sections.
 	padding := lipgloss.NewStyle().Width(targetWidth).Render(" ")
 	for i := 0; i < topPaddingLines; i++ {
 		sections = append(sections, padding)
@@ -49,6 +50,7 @@ func (m *Model) View() string {
 	sections = append(sections, padding)
 	offset++
 
+	// previewOffset tells the mouse hit-test logic how many rows precede the grid.
 	m.previewOffset = offset
 	previews := m.renderSessionPreviews(offset)
 	if previews == "" {

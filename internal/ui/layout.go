@@ -49,7 +49,7 @@ func (m *Model) updatePreviewDimensions(count int) {
 	if offset <= 0 || offset >= m.height {
 		offset = topPaddingLines
 	}
-	footerHeight := lipgloss.Height(m.renderStatus()) + 4
+	footerHeight := lipgloss.Height(m.renderStatus()) + 4 // extra rows leave breathing room for the legend
 	availableHeight := m.height - offset - footerHeight
 	if availableHeight < minPreviewHeight {
 		availableHeight = minPreviewHeight
