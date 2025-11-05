@@ -4,6 +4,7 @@ package ui
 
 import (
 	"os"
+	"strings"
 	"time"
 
 	zone "github.com/alexanderbh/bubblezone/v2"
@@ -134,6 +135,7 @@ type Model struct {
 	cardCols      int
 	previewOffset int
 	tabSessionIDs []string
+	footer        *viewport.Model
 
 	debugMsgs  []tea.Msg
 	traceMouse bool
@@ -184,6 +186,7 @@ func NewModel(client *tmux.Client, poll time.Duration, debugMsgs []tea.Msg, trac
 		toast:         &toastState{},
 		viewMode:      viewModeOverview,
 		tabSessionIDs: make([]string, 0),
+		footer:        footerViewport(),
 		hostname:      lookupHostname(),
 	}
 }
@@ -193,7 +196,13 @@ func lookupHostname() string {
 	if err != nil {
 		return ""
 	}
-	return h
+	return strings.TrimSpace(strings.ToLower(h))
+}
+
+func footerViewport() *viewport.Model {
+	v := viewport.New(viewport.WithHeight(3))
+	v.MouseWheelEnabled = false
+	return &v
 }
 
 // Init starts the initial tmux snapshot fetch and ticking loop.

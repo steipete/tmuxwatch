@@ -53,14 +53,22 @@ func (m *Model) View() string {
 	// previewOffset tells the mouse hit-test logic how many rows precede the grid.
 	m.previewOffset = offset
 	previews := m.renderSessionPreviews(offset)
+	status := m.renderStatus()
 	if previews == "" {
 		sections = append(sections, lipgloss.NewStyle().Padding(1, 2).Render("No sessions to display."))
 	} else {
 		sections = append(sections, previews)
 	}
 
-	sections = append(sections, m.renderStatus())
-	sections = append(sections, padding)
+	if m.footer != nil {
+		m.footer.SetWidth(targetWidth)
+		height := max(1, countLines(status))
+		m.footer.SetHeight(height)
+		m.footer.SetContent(status)
+		sections = append(sections, m.footer.View())
+	} else {
+		sections = append(sections, status)
+	}
 	view := lipgloss.JoinVertical(lipgloss.Left, sections...)
 	view = lipgloss.Place(targetWidth, targetHeight, lipgloss.Left, lipgloss.Top, view)
 

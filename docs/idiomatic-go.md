@@ -15,6 +15,7 @@
 
 * Small, composable packages; short names; avoid stutter (`bytes.Buffer`, not `bytes.ByteBuffer`); keep exported APIs minimal; comments start with the name they document. ([go.dev][4])
 * Follow the Go team’s *Code Review Comments* for receivers, package names, contexts, error strings (“don’t capitalize, no trailing punctuation”), initialisms (`URL`, `ID`), and more. Bookmark this. ([go.dev][2])
+* Prefer “clear code over clever code.” The Go team keeps repeating this mantra in best-practice roundups and it remains the north star for reviews. citeturn0search2
 * If you want an external style doc for team norms, Uber’s guide is widely used; treat it as advice, not law. ([GitHub][5])
 
 **Do the basics automatically**
@@ -85,8 +86,9 @@ func Load(id string) (*Widget, error) {
 
 ## 6) Concurrency: goroutines, channels, atomics
 
-* Prefer simple fan‑out/fan‑in with `errgroup.Group` — cancels the group on first error, keeps code tidy. Use it with contexts for timeouts and shutdown. ([Go Packages][19])
+* Prefer simple fan-out/fan-in with `errgroup.Group` — cancels the group on first error, keeps code tidy. Use it with contexts for timeouts and shutdown. ([Go Packages][19])
 * Reach for atomics **sparingly**; prefer `sync.Mutex` unless you’re sure. If you do use atomics, use the typed ones (`atomic.Int64`, `atomic.Pointer`) introduced in recent releases and remember the memory model basics. ([go.dev][20])
+* Reread Go Proverbs—most apply directly to concurrent code (“don’t share memory by communicating; share memory by communicating”). citeturn0search4
 
 **errgroup sketch**
 

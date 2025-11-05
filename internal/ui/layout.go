@@ -6,7 +6,6 @@ import (
 	zone "github.com/alexanderbh/bubblezone/v2"
 	"github.com/charmbracelet/bubbles/v2/viewport"
 	tea "github.com/charmbracelet/bubbletea/v2"
-	"github.com/charmbracelet/lipgloss/v2"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
@@ -49,7 +48,10 @@ func (m *Model) updatePreviewDimensions(count int) {
 	if offset <= 0 || offset >= m.height {
 		offset = topPaddingLines
 	}
-	footerHeight := lipgloss.Height(m.renderStatus()) + 4 // extra rows leave breathing room for the legend
+	footerHeight := 1
+	if m.footer != nil {
+		footerHeight = max(1, m.footer.Height()+1) // footer + spacer between grid and legend
+	}
 	availableHeight := m.height - offset - footerHeight
 	if availableHeight < minPreviewHeight {
 		availableHeight = minPreviewHeight
