@@ -40,7 +40,7 @@ func (m *Model) View() string {
 	}
 
 	m.setActiveTab(m.activeTab)
-	tabBar := m.renderTabBar()
+	tabBar := m.renderTabBar(targetWidth)
 	if tabBar != "" {
 		sections = append(sections, tabBar)
 		offset += lipgloss.Height(tabBar)

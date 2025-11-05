@@ -87,30 +87,38 @@ func TestTabIndexFromZoneIDs(t *testing.T) {
 
 // TestHandleTabMouseClick confirms tab clicks update the active tab state.
 func TestHandleTabMouseClick(t *testing.T) {
-	t.Parallel()
 
 	zone.NewGlobal()
-	id := "component###tab:1"
-	view := zone.Mark(id, "T")
-	_ = zone.Scan(view)
+	m := &Model{
+		sessions:  []tmux.Session{{ID: "sess", Name: "sess"}},
+		hidden:    make(map[string]struct{}),
+		stale:     make(map[string]struct{}),
+		collapsed: make(map[string]struct{}),
+		zonePrefix: zone.NewPrefix(),
+		width:      80,
+	}
+	bar := m.renderTabBar(80)
+	_ = zone.Scan(bar)
+	tabID := m.zonePrefix + "###tab:1"
 	var info *zone.ZoneInfo
 	deadline := time.Now().Add(50 * time.Millisecond)
 	for info == nil && time.Now().Before(deadline) {
-		info = zone.Get(id)
+		info = zone.Get(tabID)
+		time.Sleep(time.Millisecond)
 	}
 	if info == nil {
-		t.Fatal("expected zone info to be registered")
+		t.Fatal("expected session tab zone to be registered")
 	}
-
-	m := &Model{
-		tabRenderer:   newTabRenderer(),
-		detailSession: "sess",
-		sessions:      []tmux.Session{{ID: "sess", Name: "sess"}},
-	}
-	m.setActiveTab(0)
 
 	msg := tea.MouseClickMsg{X: info.StartX, Y: info.StartY, Button: tea.MouseLeft}
-	handled, cmd := m.handleTabMouse(msg)
+	ids := zone.DefaultManager.IDsInBounds(msg)
+	if len(ids) == 0 {
+		ids = zone.DefaultManager.IDsInBounds(tea.MouseMotionMsg{X: info.StartX, Y: info.StartY})
+	}
+	if len(ids) == 0 {
+		t.Fatalf("expected zone ids at (%d,%d)", info.StartX, info.StartY)
+	}
+ 	handled, cmd := m.handleTabMouse(msg)
 	if !handled {
 		t.Fatal("expected tab click to be handled")
 	}
@@ -124,8 +132,6 @@ func TestHandleTabMouseClick(t *testing.T) {
 
 // TestHandleMouseHoverSetsState ensures motion tracking highlights the card.
 func TestHandleMouseHoverSetsState(t *testing.T) {
-	t.Parallel()
-
 	zone.DefaultManager = zone.New()
 	m := &Model{
 		previews: map[string]*sessionPreview{

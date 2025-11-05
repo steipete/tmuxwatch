@@ -127,7 +127,6 @@ type Model struct {
 	hoveredSession string
 	hoveredControl string
 
-	tabRenderer   *tabRenderer
 	viewMode      viewMode
 	detailSession string
 	activeTab     int
@@ -181,7 +180,6 @@ func NewModel(client *tmux.Client, poll time.Duration, debugMsgs []tea.Msg, trac
 		debugMsgs:     append([]tea.Msg(nil), debugMsgs...),
 		traceMouse:    traceMouse,
 		toast:         &toastState{},
-		tabRenderer:   newTabRenderer(),
 		viewMode:      viewModeOverview,
 		tabSessionIDs: make([]string, 0),
 	}
