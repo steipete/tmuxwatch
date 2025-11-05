@@ -314,14 +314,14 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 				m.updatePreviewDimensions(m.filteredSessionCount())
 				return m, nil
 			}
-		if card.collapseZoneID != "" {
-			if info := zone.Get(card.collapseZoneID); info != nil && info.InBounds(msg) {
-				m.hoveredControl = ""
-				m.toggleCollapsed(card.sessionID)
-				m.updatePreviewDimensions(m.filteredSessionCount())
-				return m, nil
+			if card.collapseZoneID != "" {
+				if info := zone.Get(card.collapseZoneID); info != nil && info.InBounds(msg) {
+					m.hoveredControl = ""
+					m.toggleCollapsed(card.sessionID)
+					m.updatePreviewDimensions(m.filteredSessionCount())
+					return m, nil
+				}
 			}
-		}
 			if info := zone.Get(card.closeZoneID); info != nil && info.InBounds(msg) {
 				m.hidden[card.sessionID] = struct{}{}
 				if m.focusedSession == card.sessionID {

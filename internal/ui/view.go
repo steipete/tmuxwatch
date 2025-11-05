@@ -2,9 +2,10 @@
 package ui
 
 import (
+	"strings"
+
 	zone "github.com/alexanderbh/bubblezone/v2"
 	"github.com/charmbracelet/lipgloss/v2"
-	"strings"
 )
 
 const (
@@ -88,12 +89,27 @@ func (m *Model) View() string {
 }
 
 func clampHeight(content string, limit int) string {
-	if limit <= 0 {
+	if limit <= 0 || content == "" {
 		return ""
 	}
-	lines := strings.Split(content, "\n")
-	if len(lines) <= limit {
+
+	consumed := 0
+	lines := 0
+	for consumed < len(content) && lines < limit {
+		remainder := content[consumed:]
+		idx := strings.IndexByte(remainder, '\n')
+		if idx == -1 {
+			return content
+		}
+		consumed += idx + 1
+		lines++
+	}
+
+	if lines < limit {
 		return content
 	}
-	return strings.Join(lines[:limit], "\n")
+	if consumed > 0 && content[consumed-1] == '\n' {
+		consumed--
+	}
+	return content[:consumed]
 }

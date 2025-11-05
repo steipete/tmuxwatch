@@ -87,13 +87,12 @@ func TestTabIndexFromZoneIDs(t *testing.T) {
 
 // TestHandleTabMouseClick confirms tab clicks update the active tab state.
 func TestHandleTabMouseClick(t *testing.T) {
-
 	zone.NewGlobal()
 	m := &Model{
-		sessions:  []tmux.Session{{ID: "sess", Name: "sess"}},
-		hidden:    make(map[string]struct{}),
-		stale:     make(map[string]struct{}),
-		collapsed: make(map[string]struct{}),
+		sessions:   []tmux.Session{{ID: "sess", Name: "sess"}},
+		hidden:     make(map[string]struct{}),
+		stale:      make(map[string]struct{}),
+		collapsed:  make(map[string]struct{}),
 		zonePrefix: zone.NewPrefix(),
 		width:      80,
 	}
@@ -118,7 +117,7 @@ func TestHandleTabMouseClick(t *testing.T) {
 	if len(ids) == 0 {
 		t.Fatalf("expected zone ids at (%d,%d)", info.StartX, info.StartY)
 	}
- 	handled, cmd := m.handleTabMouse(msg)
+	handled, cmd := m.handleTabMouse(msg)
 	if !handled {
 		t.Fatal("expected tab click to be handled")
 	}

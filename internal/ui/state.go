@@ -13,16 +13,16 @@ import (
 // tabTitles derives the current tab titles based on overview and detail state.
 var (
 	tabActiveStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("231")).
-		Background(lipgloss.Color("62")).
-		Bold(true).
-		Padding(0, 1).
-		MarginRight(1)
+			Foreground(lipgloss.Color("231")).
+			Background(lipgloss.Color("62")).
+			Bold(true).
+			Padding(0, 1).
+			MarginRight(1)
 
 	tabInactiveStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color(headerColorCursor)).
-		Padding(0, 1).
-		MarginRight(1)
+				Foreground(lipgloss.Color(headerColorCursor)).
+				Padding(0, 1).
+				MarginRight(1)
 )
 
 func (m *Model) tabTitles() []string {
