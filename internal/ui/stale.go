@@ -4,6 +4,8 @@ package ui
 import (
 	"sort"
 	"time"
+
+	"github.com/steipete/tmuxwatch/internal/tmux"
 )
 
 // updateStaleSessions recalculates which sessions qualify as stale.
@@ -13,13 +15,16 @@ func (m *Model) updateStaleSessions() {
 	}
 	now := time.Now()
 	for _, session := range m.sessions {
+		if session.Attached {
+			continue
+		}
 		if sessionAllPanesDead(session) {
 			m.stale[session.ID] = struct{}{}
 			continue
 		}
-		last := sessionLatestActivity(session)
+		last := m.sessionActivity(session)
 		if last.IsZero() {
-			last = session.CreatedAt
+			continue
 		}
 		if now.Sub(last) >= staleThreshold {
 			m.stale[session.ID] = struct{}{}
@@ -59,4 +64,14 @@ func (m *Model) staleSessionIDs() []string {
 	}
 	sort.Strings(ids)
 	return ids
+}
+
+func (m *Model) sessionActivity(session tmux.Session) time.Time {
+	latest := sessionLatestActivity(session)
+	if preview, ok := m.previews[session.ID]; ok && preview != nil {
+		if preview.lastChanged.After(latest) {
+			latest = preview.lastChanged
+		}
+	}
+	return latest
 }

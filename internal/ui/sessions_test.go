@@ -109,3 +109,15 @@ func TestSessionLatestActivity(t *testing.T) {
 		t.Fatalf("sessionLatestActivity = %v, want %v", got, now.Add(-10*time.Minute))
 	}
 }
+
+func TestSessionLatestActivityNoTimestamps(t *testing.T) {
+	t.Parallel()
+
+	session := tmux.Session{
+		Windows: []tmux.Window{{Panes: []tmux.Pane{{}, {}}}},
+	}
+
+	if got := sessionLatestActivity(session); !got.IsZero() {
+		t.Fatalf("sessionLatestActivity should be zero when panes lack activity, got %v", got)
+	}
+}

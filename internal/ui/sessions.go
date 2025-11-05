@@ -72,13 +72,10 @@ func sessionAllPanesDead(session tmux.Session) bool {
 // sessionLatestActivity returns the most recent activity timestamp within a
 // session.
 func sessionLatestActivity(session tmux.Session) time.Time {
-	latest := session.CreatedAt
+	var latest time.Time
 	for _, window := range session.Windows {
 		for _, pane := range window.Panes {
 			ts := pane.LastActivity
-			if ts.IsZero() {
-				ts = pane.CreatedAt
-			}
 			if ts.After(latest) {
 				latest = ts
 			}
