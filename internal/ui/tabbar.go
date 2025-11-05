@@ -38,8 +38,8 @@ func (r *tabRenderer) Render(titles []string, active int) string {
 	bubble := app.New(ctx, root)
 	view, _ := bubble.View()
 	if strings.Contains(view, "\n") {
-		collapsed := strings.Join(strings.Split(view, "\n"), " ")
-		return collapsed
+		lines := strings.Split(view, "\n")
+		return lines[0]
 	}
 	return view
 }
