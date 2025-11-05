@@ -74,6 +74,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		closeID := fmt.Sprintf("%sclose:%s", m.zonePrefix, session.ID)
 		maxID := fmt.Sprintf("%smax:%s", m.zonePrefix, session.ID)
 		collapseID := fmt.Sprintf("%scollapse:%s", m.zonePrefix, session.ID)
+		showCollapse := !(m.viewMode == viewModeDetail && m.detailSession == session.ID)
 
 		maxLabel := maximizeLabel
 		if m.viewMode == viewModeDetail && m.detailSession == session.ID {
@@ -90,17 +91,19 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		if m.hoveredControl == maxID {
 			maxContent = decorateControl(maxLabel)
 		}
-		if m.hoveredControl == collapseID {
+		if showCollapse && m.hoveredControl == collapseID {
 			collapseContent = decorateControl(collapseDisplay)
 		}
 		if m.hoveredControl == closeID {
 			closeContent = decorateControl(closeLabel)
 		}
-		controlSegments := []string{
-			zone.Mark(maxID, maxContent),
-			zone.Mark(collapseID, collapseContent),
-			zone.Mark(closeID, closeContent),
+		controlSegments := []string{zone.Mark(maxID, maxContent)}
+		if showCollapse {
+			controlSegments = append(controlSegments, zone.Mark(collapseID, collapseContent))
+		} else {
+			collapseID = ""
 		}
+		controlSegments = append(controlSegments, zone.Mark(closeID, closeContent))
 		controls := strings.Join(controlSegments, " ")
 
 		header := lipgloss.NewStyle().Render(formatHeader(innerWidth, session, window, pane, focused, pulsing, stale, cursor, controls))
