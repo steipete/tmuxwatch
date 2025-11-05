@@ -3,6 +3,7 @@ package ui
 
 import (
 	zone "github.com/alexanderbh/bubblezone/v2"
+	"github.com/charmbracelet/bubbles/v2/viewport"
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
@@ -17,59 +18,55 @@ func (m *Model) View() string {
 
 	targetWidth := max(m.width, 1)
 	targetHeight := max(m.height, 1)
-	var sections []string
-	// Use a single-cell padding row so we can reuse it when spacing between sections.
 	padding := lipgloss.NewStyle().Width(targetWidth).Render(" ")
-	for i := 0; i < topPaddingLines; i++ {
-		sections = append(sections, padding)
-	}
-	offset := topPaddingLines
 
-	title := renderTitleBar(m)
-	sections = append(sections, title)
-	offset += lipgloss.Height(title)
-	sections = append(sections, padding)
-	offset++
+	headerParts := []string{renderTitleBar(m)}
 	if m.searching {
-		search := renderSearchBar(m.searchInput)
-		sections = append(sections, search)
-		offset += lipgloss.Height(search)
+		headerParts = append(headerParts, renderSearchBar(m.searchInput))
 	} else if m.searchQuery != "" {
-		summary := renderSearchSummary(m.searchQuery)
-		sections = append(sections, summary)
-		offset += lipgloss.Height(summary)
+		headerParts = append(headerParts, renderSearchSummary(m.searchQuery))
 	}
 
 	m.setActiveTab(m.activeTab)
-	tabBar := m.renderTabBar(targetWidth)
-	if tabBar != "" {
-		sections = append(sections, tabBar)
-		offset += lipgloss.Height(tabBar)
+	if tabBar := m.renderTabBar(targetWidth); tabBar != "" {
+		headerParts = append(headerParts, tabBar)
+	}
+	headerParts = append(headerParts, padding)
+
+	header := lipgloss.JoinVertical(lipgloss.Left, headerParts...)
+	headerHeight := max(1, countLines(header))
+	m.previewOffset = headerHeight
+
+	gridContent := m.renderSessionPreviews(headerHeight)
+	if gridContent == "" {
+		gridContent = lipgloss.NewStyle().Padding(1, 2).Render("No sessions to display.")
 	}
 
-	sections = append(sections, padding)
-	offset++
-
-	// previewOffset tells the mouse hit-test logic how many rows precede the grid.
-	m.previewOffset = offset
-	previews := m.renderSessionPreviews(offset)
 	status := m.renderStatus()
-	if previews == "" {
-		sections = append(sections, lipgloss.NewStyle().Padding(1, 2).Render("No sessions to display."))
-	} else {
-		sections = append(sections, previews)
-	}
+	cardHeight := max(1, targetHeight-headerHeight-max(1, m.footerHeight+1))
+	grid := viewport.New(viewport.WithHeight(cardHeight), viewport.WithWidth(targetWidth))
+	grid.MouseWheelEnabled = false
+	grid.SetContent(gridContent)
 
+	var footerView string
 	if m.footer != nil {
 		m.footer.SetWidth(targetWidth)
 		height := max(1, countLines(status))
 		m.footer.SetHeight(height)
 		m.footer.SetContent(status)
-		sections = append(sections, m.footer.View())
+		m.footerHeight = height
+		footerView = m.footer.View()
 	} else {
-		sections = append(sections, status)
+		m.footerHeight = max(1, countLines(status))
+		footerView = status
 	}
-	view := lipgloss.JoinVertical(lipgloss.Left, sections...)
+
+	view := lipgloss.JoinVertical(
+		lipgloss.Left,
+		header,
+		grid.View(),
+		footerView,
+	)
 	view = lipgloss.Place(targetWidth, targetHeight, lipgloss.Left, lipgloss.Top, view)
 
 	if m.traceMouse {

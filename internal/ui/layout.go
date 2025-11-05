@@ -48,10 +48,7 @@ func (m *Model) updatePreviewDimensions(count int) {
 	if offset <= 0 || offset >= m.height {
 		offset = topPaddingLines
 	}
-	footerHeight := 1
-	if m.footer != nil {
-		footerHeight = max(1, m.footer.Height()+1) // footer + spacer between grid and legend
-	}
+	footerHeight := max(1, m.footerHeight) + 1
 	availableHeight := m.height - offset - footerHeight
 	if availableHeight < minPreviewHeight {
 		availableHeight = minPreviewHeight

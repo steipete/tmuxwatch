@@ -136,6 +136,7 @@ type Model struct {
 	previewOffset int
 	tabSessionIDs []string
 	footer        *viewport.Model
+	footerHeight  int
 
 	debugMsgs  []tea.Msg
 	traceMouse bool
@@ -187,6 +188,7 @@ func NewModel(client *tmux.Client, poll time.Duration, debugMsgs []tea.Msg, trac
 		viewMode:      viewModeOverview,
 		tabSessionIDs: make([]string, 0),
 		footer:        footerViewport(),
+		footerHeight:  3,
 		hostname:      lookupHostname(),
 	}
 }
@@ -202,6 +204,7 @@ func lookupHostname() string {
 func footerViewport() *viewport.Model {
 	v := viewport.New(viewport.WithHeight(3))
 	v.MouseWheelEnabled = false
+	v.MouseWheelDelta = scrollStep
 	return &v
 }
 
