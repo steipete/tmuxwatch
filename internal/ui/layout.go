@@ -59,8 +59,10 @@ func (m *Model) updatePreviewDimensions(count int) {
 		bodyBudget = rows
 	}
 	innerHeight := max(1, bodyBudget/max(1, rows))
-	if innerHeight > 1 {
-		innerHeight--
+	if innerHeight > 2 {
+		innerHeight -= 2
+	} else if innerHeight > 1 {
+		innerHeight = 1
 	}
 	innerWidth := max(20, (m.width/cols)-(cardPadding*2+2))
 	for _, preview := range m.previews {

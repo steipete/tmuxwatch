@@ -50,7 +50,7 @@ func (m *Model) View() string {
 		separatorHeight = 1
 		separator = lipgloss.NewStyle().Width(targetWidth).Render("")
 	}
-	availableHeight := max(0, targetHeight-headerHeight-m.footerHeight-separatorHeight)
+	availableHeight := max(0, targetHeight-headerHeight-m.footerHeight-separatorHeight+1)
 	gridContent := m.renderSessionPreviews(headerHeight)
 	if gridContent == "" {
 		gridContent = emptyStateView(targetWidth)
