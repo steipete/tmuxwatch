@@ -6,7 +6,7 @@ import (
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
-const topPaddingLines = 5
+const topPaddingLines = 0
 
 // View renders the entire tmuxwatch interface, including title bar, search
 // state, session previews, status footer, and overlays.
