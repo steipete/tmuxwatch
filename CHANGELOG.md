@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.9.2] - 2025-11-05
+
+### Added
+- Graceful empty state panel when no tmux sessions are present, highlighting how to start a new one.
+- Tests covering `clampHeight`, empty state rendering, tmux “no server” detection, and layout viewport spacing.
+
+### Changed
+- Footer layout now reserves explicit vertical spacing, keeping the status legend visible regardless of grid height.
+- Card viewports trimmed to prevent clipping at the bottom of the grid while preserving tab/hover affordances.
+- Homebrew release process documented in `RELEASE.md` and cross-linked from `AGENTS.md`.
+
+### Fixed
+- Handling the “tmux not running” and “tmux missing” cases without surfacing errors; UI shows the empty state instead of partial rendering.
+- Mouse hit-testing and footer placement when the card grid empties or shrinks quickly.
+
 ## [0.9.1] - 2025-11-05
 
 ### Added
