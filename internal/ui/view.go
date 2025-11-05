@@ -60,6 +60,7 @@ func (m *Model) View() string {
 		header,
 		gridContent,
 		footerView,
+		padding,
 	)
 	view = lipgloss.Place(targetWidth, targetHeight, lipgloss.Left, lipgloss.Top, view)
 
