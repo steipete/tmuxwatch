@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	zone "github.com/lrstanley/bubblezone"
+	zone "github.com/alexanderbh/bubblezone/v2"
+	tea "github.com/charmbracelet/bubbletea/v2"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
 	"github.com/steipete/tmuxwatch/internal/ui"
@@ -80,12 +80,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "invalid debug-click y coordinate %q: %v\n", parts[1], err)
 			os.Exit(1)
 		}
-		debugMsgs = append(debugMsgs, tea.MouseMsg{
-			X:      x,
-			Y:      y,
-			Button: tea.MouseButtonLeft,
-			Action: tea.MouseActionPress,
-		})
+		debugMsgs = append(debugMsgs, tea.MouseClickMsg{X: x, Y: y, Button: tea.MouseLeft})
 		if !*traceMouse {
 			*traceMouse = true
 		}

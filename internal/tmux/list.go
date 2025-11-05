@@ -15,7 +15,7 @@ import (
 // listSessions shells out to tmux to enumerate sessions and translate them
 // into typed Session values.
 func (c *Client) listSessions(ctx context.Context) ([]Session, error) {
-	cmd := exec.CommandContext(ctx, c.bin, "list-sessions", "-F", "#{session_id}\t#{session_name}\t#{session_attached}\t#{session_created}")
+	cmd := exec.CommandContext(ctx, c.bin, "list-sessions", "-F", "#{session_id}\t#{session_name}\t#{session_attached}\t#{session_created}\t#{session_activity}")
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("list-sessions: %w", err)
@@ -28,7 +28,7 @@ func (c *Client) listSessions(ctx context.Context) ([]Session, error) {
 			continue
 		}
 		fields := strings.Split(line, "\t")
-		if len(fields) < 4 {
+		if len(fields) < 5 {
 			return nil, fmt.Errorf("list-sessions: malformed line %q", line)
 		}
 		attached := fields[2] == "1"
@@ -36,11 +36,16 @@ func (c *Client) listSessions(ctx context.Context) ([]Session, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid session_created %q: %w", fields[3], err)
 		}
+		lastActivity, err := parseUnix(fields[4])
+		if err != nil {
+			return nil, fmt.Errorf("invalid session_activity %q: %w", fields[4], err)
+		}
 		session := Session{
-			ID:        fields[0],
-			Name:      fields[1],
-			Attached:  attached,
-			CreatedAt: time.Unix(createdUnix, 0),
+			ID:           fields[0],
+			Name:         fields[1],
+			Attached:     attached,
+			CreatedAt:    time.Unix(createdUnix, 0),
+			LastActivity: lastActivity,
 		}
 		sessions = append(sessions, session)
 	}

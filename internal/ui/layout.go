@@ -3,9 +3,9 @@
 package ui
 
 import (
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
-	zone "github.com/lrstanley/bubblezone"
+	zone "github.com/alexanderbh/bubblezone/v2"
+	"github.com/charmbracelet/bubbles/v2/viewport"
+	tea "github.com/charmbracelet/bubbletea/v2"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
@@ -17,15 +17,19 @@ type innerDimension struct {
 
 // viewportFor builds a viewport with sane defaults for capturing pane output.
 func viewportFor(dim innerDimension) viewport.Model {
-	vp := viewport.New(0, minPreviewHeight)
+	opts := []viewport.Option{}
+	if dim.width > 0 {
+		opts = append(opts, viewport.WithWidth(dim.width))
+	}
+	height := minPreviewHeight
+	if dim.height > 0 {
+		height = dim.height
+	}
+	opts = append(opts, viewport.WithHeight(height))
+
+	vp := viewport.New(opts...)
 	vp.MouseWheelEnabled = false
 	vp.MouseWheelDelta = scrollStep
-	if dim.width > 0 {
-		vp.Width = dim.width
-	}
-	if dim.height > 0 {
-		vp.Height = dim.height
-	}
 	return vp
 }
 
@@ -35,15 +39,26 @@ func (m *Model) updatePreviewDimensions(count int) {
 	if count <= 0 || m.width <= 0 || m.height <= 0 {
 		return
 	}
-	frameHeight := 3
-	internalHeight := (m.height / count) - frameHeight
-	if internalHeight < minPreviewHeight {
-		internalHeight = minPreviewHeight
+	cols := 1
+	if m.viewMode != viewModeDetail && count > 1 && m.width >= 70 {
+		cols = 2
 	}
-	innerWidth := max(20, m.width-(cardPadding*2+2))
+	rows := (count + cols - 1) / cols
+	offset := m.previewOffset
+	if offset <= 0 || offset >= m.height {
+		offset = topPaddingLines
+	}
+	availableHeight := m.height - offset - 3
+	if availableHeight < minPreviewHeight {
+		availableHeight = minPreviewHeight
+	}
+	innerHeight := max(minPreviewHeight, availableHeight/max(1, rows))
+	innerWidth := max(20, (m.width/cols)-(cardPadding*2+2))
 	for _, preview := range m.previews {
-		preview.viewport.Width = innerWidth
-		preview.viewport.Height = internalHeight
+		if preview.viewport != nil {
+			preview.viewport.SetWidth(innerWidth)
+			preview.viewport.SetHeight(innerHeight)
+		}
 	}
 }
 
@@ -57,6 +72,7 @@ func (m *Model) cardAt(msg tea.MouseMsg) (cardBounds, bool) {
 	return cardBounds{}, false
 }
 
+// ensureCursor keeps the cursor pointing at a visible session entry.
 func (m *Model) ensureCursor(sessions []tmux.Session) {
 	if len(sessions) == 0 {
 		m.cursorSession = ""
@@ -74,24 +90,29 @@ func (m *Model) ensureCursor(sessions []tmux.Session) {
 	m.cursorSession = sessions[0].ID
 }
 
+// moveCursorLeft shifts the cursor one column to the left when possible.
 func (m *Model) moveCursorLeft() bool {
 	return m.moveCursorByDelta(-1, true)
 }
 
+// moveCursorRight shifts the cursor one column to the right when possible.
 func (m *Model) moveCursorRight() bool {
 	return m.moveCursorByDelta(1, true)
 }
 
+// moveCursorUp moves the cursor up one row in the card grid.
 func (m *Model) moveCursorUp() bool {
 	cols := max(1, m.cardCols)
 	return m.moveCursorByDelta(-cols, false)
 }
 
+// moveCursorDown moves the cursor down one row in the card grid.
 func (m *Model) moveCursorDown() bool {
 	cols := max(1, m.cardCols)
 	return m.moveCursorByDelta(cols, false)
 }
 
+// moveCursorByDelta advances the cursor by the provided delta if permitted.
 func (m *Model) moveCursorByDelta(delta int, enforceRow bool) bool {
 	sessions := m.filteredSessions()
 	if len(sessions) == 0 {

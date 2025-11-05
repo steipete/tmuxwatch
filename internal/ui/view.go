@@ -2,8 +2,8 @@
 package ui
 
 import (
-	"github.com/charmbracelet/lipgloss"
-	zone "github.com/lrstanley/bubblezone"
+	zone "github.com/alexanderbh/bubblezone/v2"
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 const topPaddingLines = 5
@@ -15,12 +15,21 @@ func (m *Model) View() string {
 		return "loading..."
 	}
 
+	targetWidth := max(m.width, 1)
+	targetHeight := max(m.height, 1)
 	var sections []string
-	padding := lipgloss.NewStyle().Width(max(m.width, 1)).Render(" ")
+	padding := lipgloss.NewStyle().Width(targetWidth).Render(" ")
 	for i := 0; i < topPaddingLines; i++ {
 		sections = append(sections, padding)
 	}
 	offset := topPaddingLines
+
+	m.setActiveTab(m.activeTab)
+	tabBar := m.renderTabBar()
+	if tabBar != "" {
+		sections = append(sections, tabBar)
+		offset += lipgloss.Height(tabBar)
+	}
 
 	title := renderTitleBar(m)
 	sections = append(sections, title)
@@ -38,6 +47,7 @@ func (m *Model) View() string {
 	sections = append(sections, padding)
 	offset++
 
+	m.previewOffset = offset
 	previews := m.renderSessionPreviews(offset)
 	if previews == "" {
 		sections = append(sections, lipgloss.NewStyle().Padding(1, 2).Render("No sessions to display."))
@@ -47,6 +57,7 @@ func (m *Model) View() string {
 
 	sections = append(sections, m.renderStatus())
 	view := lipgloss.JoinVertical(lipgloss.Left, sections...)
+	view = lipgloss.Place(targetWidth, targetHeight, lipgloss.Left, lipgloss.Top, view)
 
 	if m.traceMouse {
 		m.logCardLayout()

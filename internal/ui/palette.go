@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	tea "github.com/charmbracelet/bubbletea/v2"
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 // openCommandPalette populates and displays the palette.
@@ -25,6 +25,9 @@ func (m *Model) closePalette() {
 
 // handlePaletteKey processes keyboard input while the palette is open.
 func (m *Model) handlePaletteKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if _, ok := msg.(tea.KeyPressMsg); !ok {
+		return m, nil
+	}
 	switch msg.String() {
 	case "esc", "ctrl+p":
 		m.closePalette()

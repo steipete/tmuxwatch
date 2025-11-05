@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	tea "github.com/charmbracelet/bubbletea"
-	zone "github.com/lrstanley/bubblezone"
+	zone "github.com/alexanderbh/bubblezone/v2"
+	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
 // logMouseEvent prints mouse hit testing diagnostics when trace mode is on.
@@ -22,7 +22,8 @@ func (m *Model) logMouseEvent(msg tea.MouseMsg, card cardBounds, ok bool) {
 			result = fmt.Sprintf("session=%s bounds=<unknown>", card.sessionID)
 		}
 	}
-	fmt.Fprintf(os.Stderr, "[mouse] action=%v button=%v pos=(%d,%d) -> %s\n", msg.Action, msg.Button, msg.X, msg.Y, result)
+	mouse := msg.Mouse()
+	fmt.Fprintf(os.Stderr, "[mouse] event=%s button=%v pos=(%d,%d) -> %s\n", msg, mouse.Button, mouse.X, mouse.Y, result)
 }
 
 // logCardLayout dumps the latest card layout boundaries for bubblezone debug.

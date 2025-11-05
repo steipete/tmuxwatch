@@ -5,10 +5,10 @@ package ui
 import (
 	"time"
 
-	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
-	zone "github.com/lrstanley/bubblezone"
+	zone "github.com/alexanderbh/bubblezone/v2"
+	"github.com/charmbracelet/bubbles/v2/textinput"
+	"github.com/charmbracelet/bubbles/v2/viewport"
+	tea "github.com/charmbracelet/bubbletea/v2"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
@@ -18,6 +18,10 @@ const (
 	minPreviewHeight    = 6
 	cardPadding         = 1
 	closeLabel          = "[x]"
+	maximizeLabel       = "[^]"
+	restoreLabel        = "[v]"
+	collapseLabel       = "[-]"
+	expandLabel         = "[+]"
 	scrollStep          = 3
 	pulseDuration       = 1500 * time.Millisecond
 	quitChordWindow     = 600 * time.Millisecond
@@ -36,6 +40,13 @@ const (
 	headerColorExitFail = "203"
 	headerColorExitOK   = "37"
 	headerColorStale    = "103"
+)
+
+type viewMode int
+
+const (
+	viewModeOverview viewMode = iota
+	viewModeDetail
 )
 
 type (
@@ -68,9 +79,11 @@ type sessionPreview struct {
 }
 
 type cardBounds struct {
-	sessionID   string
-	zoneID      string
-	closeZoneID string
+	sessionID      string
+	zoneID         string
+	closeZoneID    string
+	maximizeZoneID string
+	collapseZoneID string
 }
 
 type commandItem struct {
@@ -90,9 +103,10 @@ type Model struct {
 
 	sessions []tmux.Session
 
-	previews map[string]*sessionPreview
-	hidden   map[string]struct{}
-	stale    map[string]struct{}
+	previews  map[string]*sessionPreview
+	hidden    map[string]struct{}
+	stale     map[string]struct{}
+	collapsed map[string]struct{}
 
 	paletteOpen     bool
 	paletteIndex    int
@@ -106,7 +120,13 @@ type Model struct {
 	focusedSession string
 	cardLayout     []cardBounds
 	cursorSession  string
-	cardCols       int
+
+	tabRenderer   *tabRenderer
+	viewMode      viewMode
+	detailSession string
+	activeTab     int
+	cardCols      int
+	previewOffset int
 
 	debugMsgs  []tea.Msg
 	traceMouse bool
@@ -139,19 +159,23 @@ func NewModel(client *tmux.Client, poll time.Duration, debugMsgs []tea.Msg, trac
 	ti.CharLimit = 256
 	ti.Prompt = "/ "
 	return &Model{
-		client:       client,
-		pollInterval: poll,
-		zonePrefix:   zone.NewPrefix(),
-		previews:     make(map[string]*sessionPreview),
-		hidden:       make(map[string]struct{}),
-		stale:        make(map[string]struct{}),
-		searchInput:  ti,
-		cardLayout:   make([]cardBounds, 0),
-		cardCols:     1,
-		inflight:     true,
-		debugMsgs:    append([]tea.Msg(nil), debugMsgs...),
-		traceMouse:   traceMouse,
-		toast:        &toastState{},
+		client:        client,
+		pollInterval:  poll,
+		zonePrefix:    zone.NewPrefix(),
+		previews:      make(map[string]*sessionPreview),
+		hidden:        make(map[string]struct{}),
+		stale:         make(map[string]struct{}),
+		collapsed:     make(map[string]struct{}),
+		searchInput:   ti,
+		cardLayout:    make([]cardBounds, 0),
+		cardCols:      1,
+		inflight:      true,
+		previewOffset: topPaddingLines,
+		debugMsgs:     append([]tea.Msg(nil), debugMsgs...),
+		traceMouse:    traceMouse,
+		toast:         &toastState{},
+		tabRenderer:   newTabRenderer(),
+		viewMode:      viewModeOverview,
 	}
 }
 

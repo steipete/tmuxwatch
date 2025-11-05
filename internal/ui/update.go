@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "github.com/charmbracelet/bubbletea/v2"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
@@ -20,6 +20,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		m.updatePreviewDimensions(m.filteredSessionCount())
 	case tea.KeyMsg:
+		if _, ok := msg.(tea.KeyPressMsg); !ok {
+			return m, nil
+		}
 		if m.paletteOpen {
 			return m.handlePaletteKey(msg)
 		}
@@ -41,6 +44,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.err = nil
 		m.lastUpdated = msg.snapshot.Timestamp
 		m.sessions = msg.snapshot.Sessions
+		if m.detailSession != "" && !m.sessionExists(m.detailSession) {
+			m.leaveDetail(true)
+		}
+		for id := range m.collapsed {
+			if !m.sessionExists(id) {
+				delete(m.collapsed, id)
+			}
+		}
 		m.updateStaleSessions()
 		cmd := m.ensurePreviewsAndCapture()
 		m.updatePreviewDimensions(m.filteredSessionCount())
@@ -62,6 +73,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				preview.lastContent = content
 				preview.lastChanged = time.Now()
 				preview.viewport.GotoBottom()
+				m.updateStaleSessions()
 			}
 		}
 	case paneVarsMsg:
@@ -80,12 +92,16 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.focusedSession == id {
 				m.focusedSession = ""
 			}
+			if m.detailSession == id {
+				m.leaveDetail(true)
+			}
 			if m.cursorSession == id {
 				m.cursorSession = ""
 			}
 			delete(m.previews, id)
 			delete(m.hidden, id)
 			delete(m.stale, id)
+			delete(m.collapsed, id)
 		}
 		m.inflight = true
 		return m, fetchSnapshotCmd(m.client)
@@ -151,6 +167,12 @@ func (m *Model) ensurePreviewsAndCapture() tea.Cmd {
 // filteredSessions applies the active search filter and hidden toggles to the
 // current snapshot.
 func (m *Model) filteredSessions() []tmux.Session {
+	if m.viewMode == viewModeDetail && m.detailSession != "" {
+		if session, ok := m.sessionByID(m.detailSession); ok {
+			return []tmux.Session{session}
+		}
+		m.leaveDetail(true)
+	}
 	var out []tmux.Session
 	query := strings.ToLower(m.searchQuery)
 	for _, session := range m.sessions {

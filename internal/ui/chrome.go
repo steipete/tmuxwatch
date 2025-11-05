@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/bubbles/v2/textinput"
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 // renderSearchBar prints the interactive search prompt and input box.

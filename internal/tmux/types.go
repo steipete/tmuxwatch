@@ -14,7 +14,9 @@ type Session struct {
 	Name      string
 	Attached  bool
 	CreatedAt time.Time
-	Windows   []Window
+	// LastActivity records the most recent activity timestamp reported by tmux.
+	LastActivity time.Time
+	Windows      []Window
 }
 
 // Window represents a tmux window and its panes.

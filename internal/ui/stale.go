@@ -67,7 +67,10 @@ func (m *Model) staleSessionIDs() []string {
 }
 
 func (m *Model) sessionActivity(session tmux.Session) time.Time {
-	latest := sessionLatestActivity(session)
+	latest := session.LastActivity
+	if paneLatest := sessionLatestActivity(session); paneLatest.After(latest) {
+		latest = paneLatest
+	}
 	if preview, ok := m.previews[session.ID]; ok && preview != nil {
 		if preview.lastChanged.After(latest) {
 			latest = preview.lastChanged

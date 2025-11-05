@@ -3,9 +3,10 @@
 package ui
 
 import (
+	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 // renderStatus returns the cached status footer, recomputing when necessary.
@@ -25,7 +26,7 @@ func (m *Model) buildStatusLine() string {
 		lipgloss.NewStyle().
 			Foreground(lipgloss.Color("245")).
 			Padding(0, 2).
-			Render("mouse: click focus, scroll logs, close [x] · keys: / search, H show hidden, X kill stale, ctrl+X clean all, ctrl+P palette, q quit"),
+			Render(fmt.Sprintf("mouse: click focus, scroll, %s/%s detail, %s/%s collapse, close %s · keys: / search, H show hidden, X kill stale, ctrl+X clean all, ctrl+P palette, q quit", maximizeLabel, restoreLabel, collapseLabel, expandLabel, closeLabel)),
 	}
 
 	if stale := m.staleSessionNames(); len(stale) > 0 {

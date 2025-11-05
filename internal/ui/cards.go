@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/lipgloss"
-	zone "github.com/lrstanley/bubblezone"
+	zone "github.com/alexanderbh/bubblezone/v2"
+	"github.com/charmbracelet/lipgloss/v2"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
@@ -23,7 +23,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 	}
 
 	cols := 1
-	if len(sessions) > 1 && m.width >= 70 {
+	if m.viewMode != viewModeDetail && len(sessions) > 1 && m.width >= 70 {
 		cols = 2
 	}
 	m.cardCols = cols
@@ -55,8 +55,8 @@ func (m *Model) renderSessionPreviews(offset int) string {
 			continue
 		}
 
-		preview.viewport.Width = innerWidth
-		preview.viewport.Height = innerHeight
+		preview.viewport.SetWidth(innerWidth)
+		preview.viewport.SetHeight(innerHeight)
 
 		pulsing := now.Sub(preview.lastChanged) < pulseDuration
 		stale := m.isStale(session.ID)
@@ -65,10 +65,29 @@ func (m *Model) renderSessionPreviews(offset int) string {
 
 		cardID := fmt.Sprintf("%scard:%s", m.zonePrefix, session.ID)
 		closeID := fmt.Sprintf("%sclose:%s", m.zonePrefix, session.ID)
+		maxID := fmt.Sprintf("%smax:%s", m.zonePrefix, session.ID)
+		collapseID := fmt.Sprintf("%scollapse:%s", m.zonePrefix, session.ID)
 
-		close := zone.Mark(closeID, closeLabel)
-		header := lipgloss.NewStyle().Render(formatHeader(innerWidth, session, window, pane, focused, pulsing, stale, cursor, close))
+		maxLabel := maximizeLabel
+		if m.viewMode == viewModeDetail && m.detailSession == session.ID {
+			maxLabel = restoreLabel
+		}
+		collapseDisplay := collapseLabel
+		if m.isCollapsed(session.ID) {
+			collapseDisplay = expandLabel
+		}
+
+		controls := strings.Join([]string{
+			zone.Mark(maxID, maxLabel),
+			zone.Mark(collapseID, collapseDisplay),
+			zone.Mark(closeID, closeLabel),
+		}, " ")
+
+		header := lipgloss.NewStyle().Render(formatHeader(innerWidth, session, window, pane, focused, pulsing, stale, cursor, controls))
 		body := preview.viewport.View()
+		if m.isCollapsed(session.ID) {
+			body = ""
+		}
 
 		borderStyle := baseStyle
 		switch {
@@ -96,9 +115,11 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		grid[rowIdx] = append(grid[rowIdx], cardContent)
 
 		m.cardLayout = append(m.cardLayout, cardBounds{
-			sessionID:   session.ID,
-			zoneID:      cardID,
-			closeZoneID: closeID,
+			sessionID:      session.ID,
+			zoneID:         cardID,
+			closeZoneID:    closeID,
+			maximizeZoneID: maxID,
+			collapseZoneID: collapseID,
 		})
 	}
 
@@ -119,7 +140,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 
 // formatHeader builds the label line for a session card, colouring it based on
 // status and focus state.
-func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux.Pane, focused, pulsing, stale, cursor bool, close string) string {
+func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux.Pane, focused, pulsing, stale, cursor bool, controls string) string {
 	var meta []string
 	if pane.Dead {
 		meta = append(meta, pane.StatusString())
@@ -137,7 +158,7 @@ func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux
 	}
 
 	labelWidth := lipgloss.Width(label)
-	spaceForLabel := width - lipgloss.Width(close)
+	spaceForLabel := width - lipgloss.Width(controls)
 	if spaceForLabel < 1 {
 		spaceForLabel = 1
 	}
@@ -148,7 +169,7 @@ func formatHeader(width int, session tmux.Session, window tmux.Window, pane tmux
 	if padding < 0 {
 		padding = 0
 	}
-	header := label + strings.Repeat(" ", padding) + close
+	header := label + strings.Repeat(" ", padding) + controls
 	style := lipgloss.NewStyle()
 	switch {
 	case pane.Dead && pane.DeadStatus != 0:
