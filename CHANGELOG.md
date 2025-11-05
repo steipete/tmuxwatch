@@ -6,9 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Upgraded Bubble Tea, Bubbles, and Lip Gloss to their v2 preview releases and adopted BubbleApp’s tab titles component for rendering the new tab strip.
+- Added an Overview/Session tab bar, `ctrl+m` maximise/restore shortcuts, and per-card collapse toggles with matching mouse controls.
 - Added keyboard navigation for session cards (arrow keys + Enter) and a double-Esc chord to exit focus.
 - Documented the Homebrew installation workflow in the README.
 - Relaxed stale session detection to trust live preview activity and ignore attached sessions.
+- Fixed header clipping by clamping the rendered view to the terminal bounds and syncing viewport sizing with the tab offset.
+- Routed BubbleZone identifiers from BubbleApp’s tabs so mouse clicks now switch tabs reliably; added regression tests for the helper logic.
+- Added `gorunfresh` convenience script (plus TMUX guardrails) for cache-busting rebuilds and mouse debugging via `--debug-click`.
 
 ## [0.9] - 2025-11-05
 

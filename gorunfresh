@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$SCRIPT_DIR"
+
+if [[ -z "${TMUX:-}" ]]; then
+  echo "tmuxwatch must run inside tmux. Try: tmux new-session -s watch './gorunfresh'" >&2
+  exit 1
+fi
+
+exec "$REPO_ROOT/scripts/run-fresh.sh" "$@"

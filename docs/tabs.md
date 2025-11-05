@@ -1,32 +1,25 @@
-# Tabs Roadmap
+# Tab Bar Integration
 
-This note captures the work required to integrate BubbleApp’s Tab controls into tmuxwatch.
+This note records how the new tabbed layout is wired into tmuxwatch.
 
-## Goals
-- Top-level tab bar driven by `component/tabs` so users can switch between the grid summary and a single-session detail view.
-- Per-session controls for **maximize** (switch the Tab to detail mode) and **collapse** (shrink the card in the grid).
-- Keyboard ergonomics: `shift+left/right` to change tabs, `enter` to pop into detail, `esc` to return.
+## BubbleApp component usage
+- We render the strip with `github.com/alexanderbh/bubbleapp/component/tabtitles`. The BubbleApp runtime handles the layout and styling of the tab titles, while tmuxwatch keeps ownership of state and input routing.
+- The component is instantiated on each `View` render through a lightweight helper that calls `app.NewCtx()` and renders `tabtitles.New(...)` for the current tab titles. We treat the BubbleApp output purely as view markup; key and mouse handling stays in tmuxwatch so the existing Bubble Tea model remains unchanged.
+- BubbleZone IDs emitted by the component are inspected in `handleTabMouse`; clicks on `tab:<n>` now switch tabs (with helper coverage in `handlers_test.go`).
 
-## BubbleApp Integration
-1. Vendor the `github.com/alexanderbh/bubbleapp` module and initialise a lightweight `app.Ctx` that renders only the tab strip. BubbleApp already exports `tabs.New` and `tabtitles.New` widgets that manage focus, hover, and theming.
-2. Mount the tab component inside the existing Bubble Tea model by:
-   - Maintaining the active tab index in `ui.Model` (`viewMode` enum).
-   - Delegating tab key/mouse events to BubbleApp’s handlers via a small adapter (`tabsBridge.Update(tea.Msg)`).
-   - Rendering the strip with `tabsBridge.View()` and injecting it at the top of `View()` before the title bar.
-3. Theme alignment: Map tmuxwatch palette to BubbleApp’s theme struct so the tab colours follow our existing Lip Gloss scheme.
+## Tabs & view modes
+- **Overview tab** (always present) renders the existing grid layout.
+- **Session tab** appears when a session is maximised. We use a new `viewModeDetail` flag to render only the selected session, reusing the existing card renderer.
+- `shift+left/right` switches tabs. The maximize control (`ctrl+m` or clicking `[^]`) jumps straight to the session tab; `esc` or the Overview tab returns to the grid.
 
-## Layout Changes
-- **Grid Tab**: Preserve current card layout, but add per-card action glyphs (`[□]` maximize, `[–]` collapse). Collapsed cards render the header only, freeing vertical space.
-- **Detail Tab**: Reuse `sessionPreview` viewport at terminal width/height; surface pane variables and stale state in a sidebar. Provide `c`/`[` shortcuts to collapse/return.
-- Update `updatePreviewDimensions` to honour collapsed heights and full-screen detail mode.
+## Card controls
+- Headers now expose three affordances: `[ ^ ]` maximise/restore, `[-]/[+]` collapse, `[x]` hide. We map those to mouse zones via BubbleZone so clicks continue to work alongside the new keyboard shortcuts (`ctrl+m`, `z`, `Z`).
+- Collapsed cards collapse their body content to a single header row so the grid can show more sessions at once.
 
-## Risks & Mitigations
-- BubbleApp expects to own the Bubble Tea program; we’ll isolate it inside an adapter so we only use the tab widget and keep existing state management.
-- Mouse zone IDs must be synchronised between tmuxwatch and BubbleApp to avoid conflicting hit-tests.
-- Performance: limit pane capture to visible sessions (already handled) and gate detail polling to the active tab.
+## Implementation checklist
+- Track additional UI state in the Bubble Tea model: `viewMode`, `detailSession`, `activeTab`, and a `collapsed` set.
+- Adjust `filteredSessions` to return only the detail session when in detail mode.
+- Update the status footer and cheat sheet to describe the new controls.
+- Cover the helper logic with unit tests (`state_test.go`).
 
-## Next Steps
-1. Spike a `tabsBridge` wrapper that initialises BubbleApp, handles `tea.Msg`, and returns the rendered tab strip.
-2. Add model fields for `tabsActive`, `viewMode`, and collapsed state tracking.
-3. Wire maximize/minimize actions and update keyboard/mouse handlers.
-4. Expand tests to cover collapsed layout calculations and tab switching logic.
+With these pieces in place, the tabs integrate cleanly while tmuxwatch retains its single Bubble Tea program and existing bubblezone layouts.
