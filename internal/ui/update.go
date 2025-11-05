@@ -49,6 +49,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.inflight = false
 		m.err = msg.err
 		return m, scheduleTick(m.pollInterval)
+	case statusMsg:
+		m.showToast(string(msg))
 	case paneContentMsg:
 		if preview, ok := m.previews[msg.sessionID]; ok && preview.paneID == msg.paneID {
 			content := strings.TrimRight(msg.text, "\n")

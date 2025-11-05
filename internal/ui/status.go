@@ -1,3 +1,5 @@
+// File status.go renders the status footer, stale indicators, and toast
+// messages.
 package ui
 
 import (
@@ -6,6 +8,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// renderStatus returns the cached status footer, recomputing when necessary.
 func (m *Model) renderStatus() string {
 	content := m.buildStatusLine()
 	if content == m.cachedStatus {
@@ -15,6 +18,8 @@ func (m *Model) renderStatus() string {
 	return content
 }
 
+// buildStatusLine assembles the footer lines detailing input helpers, stale
+// sessions, pane variables, toasts, and errors.
 func (m *Model) buildStatusLine() string {
 	lines := []string{
 		lipgloss.NewStyle().
@@ -45,6 +50,9 @@ func (m *Model) buildStatusLine() string {
 			Padding(0, 2).
 			Render("Error: " + m.err.Error())
 		lines = append(lines, errPart)
+	}
+	if toast := m.toastView(m.width); toast != "" {
+		lines = append(lines, toast)
 	}
 
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)

@@ -31,6 +31,7 @@ func scheduleTick(interval time.Duration) tea.Cmd {
 	})
 }
 
+// emitMsg replays the provided message during the next update cycle.
 func emitMsg(msg tea.Msg) tea.Cmd {
 	return func() tea.Msg {
 		return msg
@@ -54,6 +55,13 @@ func fetchPaneVarsCmd(client *tmux.Client, sessionID, paneID string) tea.Cmd {
 		defer cancel()
 		vars, err := client.PaneVariables(ctx, paneID)
 		return paneVarsMsg{sessionID: sessionID, paneID: paneID, vars: vars, err: err}
+	}
+}
+
+// showStatusMessage emits a statusMsg for later handling in the update loop.
+func showStatusMessage(msg string) tea.Cmd {
+	return func() tea.Msg {
+		return statusMsg(msg)
 	}
 }
 

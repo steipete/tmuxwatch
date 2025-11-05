@@ -38,6 +38,7 @@ const (
 
 type (
 	snapshotMsg    struct{ snapshot tmux.Snapshot }
+	statusMsg      string
 	paneContentMsg struct {
 		sessionID string
 		paneID    string
@@ -98,6 +99,7 @@ type Model struct {
 	searchInput textinput.Model
 	searching   bool
 	searchQuery string
+	toast       *toastState
 
 	focusedSession string
 	cardLayout     []cardBounds
@@ -111,6 +113,13 @@ type Model struct {
 
 	cachedStatus string
 	lastCtrlC    time.Time
+}
+
+func sessionLabel(id string) string {
+	if len(id) > 1 && id[0] == '$' {
+		return id[1:]
+	}
+	return id
 }
 
 // NewModel builds a Model with defaults and the provided tmux client.
@@ -134,6 +143,7 @@ func NewModel(client *tmux.Client, poll time.Duration, debugMsgs []tea.Msg, trac
 		inflight:     true,
 		debugMsgs:    append([]tea.Msg(nil), debugMsgs...),
 		traceMouse:   traceMouse,
+		toast:        &toastState{},
 	}
 }
 

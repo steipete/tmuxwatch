@@ -1,9 +1,12 @@
+// File view.go orchestrates the final Bubble Tea view composition.
 package ui
 
 import (
 	"github.com/charmbracelet/lipgloss"
 	zone "github.com/lrstanley/bubblezone"
 )
+
+const topPaddingLines = 5
 
 // View renders the entire tmuxwatch interface, including title bar, search
 // state, session previews, status footer, and overlays.
@@ -14,8 +17,10 @@ func (m *Model) View() string {
 
 	var sections []string
 	padding := lipgloss.NewStyle().Width(max(m.width, 1)).Render(" ")
-	sections = append(sections, padding, padding, padding, padding)
-	offset := 4
+	for i := 0; i < topPaddingLines; i++ {
+		sections = append(sections, padding)
+	}
+	offset := topPaddingLines
 
 	title := renderTitleBar(m)
 	sections = append(sections, title)
