@@ -1,7 +1,10 @@
 // File view_test.go exercises view-specific helpers.
 package ui
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestClampHeight(t *testing.T) {
 	t.Parallel()
@@ -29,5 +32,17 @@ func TestClampHeight(t *testing.T) {
 				t.Fatalf("clampHeight(%q, %d) = %q, want %q", tc.content, tc.limit, got, tc.want)
 			}
 		})
+	}
+}
+
+func TestEmptyStateView(t *testing.T) {
+	t.Parallel()
+
+	view := emptyStateView(60)
+	if !strings.Contains(view, "No tmux sessions detected.") {
+		t.Fatalf("empty state missing headline: %q", view)
+	}
+	if !strings.Contains(view, "tmux new -s demo") {
+		t.Fatalf("empty state missing helper: %q", view)
 	}
 }

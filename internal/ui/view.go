@@ -48,7 +48,7 @@ func (m *Model) View() string {
 	gridLimit := max(1, targetHeight-headerHeight-m.footerHeight-gridVerticalReserve)
 	gridContent := clampHeight(m.renderSessionPreviews(headerHeight), gridLimit)
 	if gridContent == "" {
-		gridContent = lipgloss.NewStyle().Padding(1, 2).Render("No sessions to display.")
+		gridContent = emptyStateView(targetWidth)
 	}
 
 	footerView := status
@@ -112,4 +112,21 @@ func clampHeight(content string, limit int) string {
 		consumed--
 	}
 	return content[:consumed]
+}
+
+func emptyStateView(width int) string {
+	if width <= 0 {
+		width = 40
+	}
+	message := "No tmux sessions detected."
+	helper := "Start one with `tmux new -s demo` or run `./scripts/run-fresh.sh`."
+	box := lipgloss.JoinVertical(lipgloss.Left, message, helper)
+	styled := lipgloss.NewStyle().
+		Border(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color(borderColorCursor)).
+		Padding(1, 2).
+		Foreground(lipgloss.Color("252")).
+		Render(box)
+
+	return lipgloss.PlaceHorizontal(max(width, lipgloss.Width(styled)), lipgloss.Center, styled)
 }

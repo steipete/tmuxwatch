@@ -18,6 +18,9 @@ func (c *Client) listSessions(ctx context.Context) ([]Session, error) {
 	cmd := exec.CommandContext(ctx, c.bin, "list-sessions", "-F", "#{session_id}\t#{session_name}\t#{session_attached}\t#{session_created}\t#{session_activity}")
 	out, err := cmd.Output()
 	if err != nil {
+		if isNoServerError(err) {
+			return []Session{}, nil
+		}
 		return nil, fmt.Errorf("list-sessions: %w", err)
 	}
 	scanner := bufio.NewScanner(strings.NewReader(string(out)))
@@ -61,6 +64,9 @@ func (c *Client) listWindows(ctx context.Context) ([]Window, error) {
 	cmd := exec.CommandContext(ctx, c.bin, "list-windows", "-a", "-F", "#{session_id}\t#{window_id}\t#{window_index}\t#{window_name}\t#{window_active}\t#{window_last_flag}")
 	out, err := cmd.Output()
 	if err != nil {
+		if isNoServerError(err) {
+			return []Window{}, nil
+		}
 		return nil, fmt.Errorf("list-windows: %w", err)
 	}
 	scanner := bufio.NewScanner(strings.NewReader(string(out)))
@@ -116,6 +122,9 @@ func (c *Client) listPanes(ctx context.Context) ([]Pane, error) {
 	cmd := exec.CommandContext(ctx, c.bin, "list-panes", "-a", "-F", format)
 	out, err := cmd.Output()
 	if err != nil {
+		if isNoServerError(err) {
+			return []Pane{}, nil
+		}
 		return nil, fmt.Errorf("list-panes: %w", err)
 	}
 	scanner := bufio.NewScanner(strings.NewReader(string(out)))
