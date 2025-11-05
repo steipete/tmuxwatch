@@ -43,3 +43,15 @@ func TestMax(t *testing.T) {
 		t.Fatalf("max(7, -1) = %d, want 7", got)
 	}
 }
+
+// TestMin ensures the helper returns the lesser of two integers.
+func TestMin(t *testing.T) {
+	t.Parallel()
+
+	if got := min(2, 10); got != 2 {
+		t.Fatalf("min(2, 10) = %d, want 2", got)
+	}
+	if got := min(7, -1); got != -1 {
+		t.Fatalf("min(7, -1) = %d, want -1", got)
+	}
+}

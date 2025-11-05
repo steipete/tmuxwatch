@@ -66,6 +66,8 @@ func (m *Model) handlePaletteKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 func (m *Model) buildCommandItems() []commandItem {
 	var items []commandItem
 
+	items = append(items, m.tabPaletteCommands()...)
+
 	focusedStale := m.isStale(m.focusedSession)
 	if m.focusedSession != "" {
 		sessionID := m.focusedSession
@@ -184,4 +186,40 @@ func paletteStyle() lipgloss.Style {
 		BorderForeground(lipgloss.Color("62")).
 		Background(lipgloss.Color("235")).
 		Padding(1, 2)
+}
+
+// tabPaletteCommands returns palette items for switching between tabs.
+func (m *Model) tabPaletteCommands() []commandItem {
+	var cmds []commandItem
+
+	if m.viewMode != viewModeOverview {
+		cmds = append(cmds, commandItem{
+			label:   "Switch to Overview tab",
+			enabled: true,
+			run: func(*Model) tea.Cmd {
+				m.leaveDetail(false)
+				m.setActiveTab(0)
+				m.updatePreviewDimensions(m.filteredSessionCount())
+				return nil
+			},
+		})
+	}
+
+	if m.detailSession != "" {
+		label := fmt.Sprintf("Switch to Session tab (%s)", sessionLabel(m.detailSession))
+		cmds = append(cmds, commandItem{
+			label:   label,
+			enabled: m.detailSession != "",
+			run: func(*Model) tea.Cmd {
+				if m.detailSession == "" {
+					return nil
+				}
+				m.enterDetail(m.detailSession)
+				m.updatePreviewDimensions(m.filteredSessionCount())
+				return nil
+			},
+		})
+	}
+
+	return cmds
 }

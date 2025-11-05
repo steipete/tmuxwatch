@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea/v2"
+
+	"github.com/steipete/tmuxwatch/internal/tmux"
 )
 
 // TestHandlePaletteKeyNavigationWrap ensures palette selection wraps via arrow keys.
@@ -65,5 +67,37 @@ func TestHandlePaletteKeyExecute(t *testing.T) {
 	}
 	if !ran {
 		t.Fatal("expected run func to execute")
+	}
+}
+
+// TestTabPaletteCommands exposes overview/detail switching in the palette.
+func TestTabPaletteCommands(t *testing.T) {
+	t.Parallel()
+
+	m := &Model{
+		collapsed:     make(map[string]struct{}),
+		hidden:        make(map[string]struct{}),
+		stale:         make(map[string]struct{}),
+		sessions:      []tmux.Session{{ID: "$1", Name: "dev"}},
+		viewMode:      viewModeDetail,
+		detailSession: "$1",
+	}
+
+	items := m.buildCommandItems()
+	var hasOverview, hasDetail bool
+	for _, item := range items {
+		switch item.label {
+		case "Switch to Overview tab":
+			hasOverview = true
+		case "Switch to Session tab (1)":
+			hasDetail = true
+		}
+	}
+
+	if !hasOverview {
+		t.Fatal("expected palette to include Switch to Overview tab")
+	}
+	if !hasDetail {
+		t.Fatal("expected palette to include Session tab command")
 	}
 }

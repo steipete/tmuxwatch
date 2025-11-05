@@ -26,6 +26,9 @@ const (
 	pulseDuration       = 1500 * time.Millisecond
 	quitChordWindow     = 600 * time.Millisecond
 	staleThreshold      = time.Hour
+	minCaptureLines     = 120
+	maxCaptureLines     = 800
+	captureSlackLines   = 80
 	borderColorBase     = "62"
 	borderColorFocus    = "212"
 	borderColorPulse    = "213"

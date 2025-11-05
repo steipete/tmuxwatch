@@ -27,3 +27,11 @@ func max(a, b int) int {
 	}
 	return b
 }
+
+// min returns the smallest of two integers.
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}

@@ -125,6 +125,10 @@ func (m *Model) ensurePreviewsAndCapture() tea.Cmd {
 			continue
 		}
 		active[session.ID] = struct{}{}
+
+		collapsed := m.isCollapsed(session.ID)
+		isFocused := session.ID == m.focusedSession
+		inDetail := m.viewMode == viewModeDetail && m.detailSession == session.ID
 		window, ok := activeWindow(session)
 		if !ok {
 			continue
@@ -148,7 +152,14 @@ func (m *Model) ensurePreviewsAndCapture() tea.Cmd {
 			preview.lastContent = ""
 			preview.vars = nil
 		}
-		cmds = append(cmds, fetchPaneContentCmd(m.client, session.ID, pane.ID, 400))
+		shouldCapture := true
+		if collapsed && !isFocused && !inDetail {
+			shouldCapture = false
+		}
+		if shouldCapture {
+			lines := captureLinesFor(preview.viewport.Height())
+			cmds = append(cmds, fetchPaneContentCmd(m.client, session.ID, pane.ID, lines))
+		}
 		if session.ID == m.focusedSession {
 			cmds = append(cmds, fetchPaneVarsCmd(m.client, session.ID, pane.ID))
 		}
@@ -189,4 +200,19 @@ func (m *Model) filteredSessions() []tmux.Session {
 // filteredSessionCount provides a quick count for layout calculations.
 func (m *Model) filteredSessionCount() int {
 	return len(m.filteredSessions())
+}
+
+// captureLinesFor determines how many lines to capture for a viewport height.
+func captureLinesFor(height int) int {
+	lines := minCaptureLines
+	if height > 0 {
+		lines = height + captureSlackLines
+	}
+	if lines < minCaptureLines {
+		lines = minCaptureLines
+	}
+	if lines > maxCaptureLines {
+		lines = maxCaptureLines
+	}
+	return lines
 }
