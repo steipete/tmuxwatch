@@ -48,17 +48,47 @@ func (m *Model) renderTabBar(width int) string {
 	if len(titles) == 0 {
 		return ""
 	}
-	segments := make([]string, 0, len(titles))
+	type tabSegment struct {
+		rendered string
+		width    int
+		zoneID   string
+	}
+	segments := make([]tabSegment, 0, len(titles))
 	for i, title := range titles {
 		style := tabInactiveStyle
 		if i == m.activeTab {
 			style = tabActiveStyle
 		}
 		zoneID := fmt.Sprintf("%s###tab:%d", m.zonePrefix, i)
-		segments = append(segments, zone.Mark(zoneID, style.Render(title)))
+		rendered := style.Render(title)
+		segments = append(segments, tabSegment{
+			rendered: rendered,
+			width:    lipgloss.Width(rendered),
+			zoneID:   zoneID,
+		})
 	}
-	bar := lipgloss.JoinHorizontal(lipgloss.Left, segments...)
-	return lipgloss.PlaceHorizontal(max(width, lipgloss.Width(bar)), lipgloss.Left, bar)
+	targetWidth := max(1, width)
+	rows := make([]string, 0, len(segments))
+	current := make([]string, 0, len(segments))
+	currentWidth := 0
+	for _, seg := range segments {
+		marked := zone.Mark(seg.zoneID, seg.rendered)
+		if currentWidth > 0 && currentWidth+seg.width > targetWidth {
+			row := lipgloss.JoinHorizontal(lipgloss.Left, current...)
+			rowWidth := max(targetWidth, lipgloss.Width(row))
+			rows = append(rows, lipgloss.NewStyle().Width(rowWidth).Render(row))
+			current = current[:0]
+			currentWidth = 0
+		}
+		current = append(current, marked)
+		currentWidth += seg.width
+	}
+	if len(current) > 0 {
+		row := lipgloss.JoinHorizontal(lipgloss.Left, current...)
+		rowWidth := max(targetWidth, lipgloss.Width(row))
+		rows = append(rows, lipgloss.NewStyle().Width(rowWidth).Render(row))
+	}
+	return lipgloss.JoinVertical(lipgloss.Left, rows...)
 }
 
 // shiftActiveTab moves the active tab by the provided delta, clamping to range.

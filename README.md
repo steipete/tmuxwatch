@@ -28,7 +28,9 @@ tmux new-session -d -s watch './gorunfresh --trace-mouse'
 tmux attach -t watch
 
 # prefer to run outside tmux?
-./gorunfresh --dump  # runs directly unless TMUXWATCH_FORCE_TMUX=1 is set
+./gorunfresh --dump   # runs directly unless TMUXWATCH_FORCE_TMUX=1 is set
+./gorunfresh --watch  # starts poltergeist + polter --watch to auto-restart after successful builds
+./scripts/run-hot.sh  # single command that starts daemon in the background and launches tmuxwatch with hot reload
 ```
 Press `q` (or double `ctrl+c`) to exit. Prefer running tmuxwatch in its own tmux session to keep the UI isolated from your workspaces. For local development you can substitute `./gorunfresh --debug-click 30,10 --trace-mouse` inside the session to replay a mouse event while inspecting BubbleZone logs.
 

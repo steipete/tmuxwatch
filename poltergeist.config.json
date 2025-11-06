@@ -1,0 +1,21 @@
+{
+  "version": "1.0",
+  "projectType": "mixed",
+  "targets": [
+    {
+      "name": "tmuxwatch-cli",
+      "type": "executable",
+      "buildCommand": "mkdir -p ./dist/dev && go build -o ./dist/dev/tmuxwatch ./cmd/tmuxwatch",
+      "outputPath": "./dist/dev/tmuxwatch",
+      "watchPaths": [
+        "cmd/**/*.go",
+        "internal/**/*.go",
+        "go.mod",
+        "go.sum"
+      ],
+      "environment": {
+        "CGO_ENABLED": "0"
+      }
+    }
+  ]
+}

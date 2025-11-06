@@ -39,36 +39,100 @@ func (m *Model) updatePreviewDimensions(count int) {
 	if count <= 0 || m.width <= 0 || m.height <= 0 {
 		return
 	}
-	cols := 1
-	if m.viewMode != viewModeDetail && count > 1 && m.width >= 70 {
-		cols = 2
-	}
-	rows := (count + cols - 1) / cols
 	offset := m.previewOffset
 	if offset <= 0 || offset >= m.height {
 		offset = topPaddingLines
 	}
 	footerHeight := max(1, m.footerHeight)
 	availableHeight := m.height - offset - footerHeight - gridSpacing
-	if availableHeight < minPreviewHeight {
-		availableHeight = minPreviewHeight
+	if availableHeight < 1 {
+		availableHeight = 1
 	}
-	frameHeight := 3 // header + top/bottom border
-	bodyBudget := availableHeight - rows*frameHeight
-	if bodyBudget < rows {
-		bodyBudget = rows
+	const (
+		frameHeight     = 3
+		minInnerWidth   = 20
+		columnOverhead  = cardPadding*2 + 2
+		minColumnStride = minInnerWidth + columnOverhead
+	)
+
+	maxCols := 1
+	if m.viewMode != viewModeDetail && count > 1 {
+		maxCols = min(count, max(1, m.width/minColumnStride))
 	}
-	innerHeight := max(1, bodyBudget/max(1, rows))
-	if innerHeight > 2 {
-		innerHeight -= 2
-	} else if innerHeight > 1 {
-		innerHeight = 1
+
+	selectedCols := 1
+	selectedHeight := 0
+	selectedWidth := max(1, m.width-columnOverhead)
+	foundFit := false
+
+	for cols := maxCols; cols >= 1; cols-- {
+		columnWidth := m.width / cols
+		if columnWidth < minColumnStride && cols > 1 {
+			continue
+		}
+		innerWidth := columnWidth - columnOverhead
+		if innerWidth < 1 {
+			innerWidth = 1
+		}
+		rows := (count + cols - 1) / cols
+		if rows < 1 {
+			rows = 1
+		}
+		bodyBudget := availableHeight - rows*frameHeight
+		if bodyBudget < 0 {
+			bodyBudget = 0
+		}
+		cellBody := 0
+		if rows > 0 {
+			cellBody = bodyBudget / rows
+		}
+		candidateHeight := 0
+		switch {
+		case cellBody > 2:
+			candidateHeight = cellBody - 2
+		case cellBody > 0:
+			candidateHeight = 1
+		default:
+			candidateHeight = 0
+		}
+
+		predicted := rows * (frameHeight + candidateHeight)
+		if !foundFit {
+			selectedCols = cols
+			selectedWidth = innerWidth
+			selectedHeight = candidateHeight
+		}
+		if predicted <= availableHeight {
+			// distribute leftover height evenly if possible
+			slack := availableHeight - predicted
+			if slack > 0 && rows > 0 {
+				candidateHeight += slack / rows
+				if candidateHeight < 0 {
+					candidateHeight = 0
+				}
+			}
+			selectedCols = cols
+			selectedWidth = innerWidth
+			selectedHeight = candidateHeight
+			foundFit = true
+			break
+		}
 	}
-	innerWidth := max(20, (m.width/cols)-(cardPadding*2+2))
+
+	if selectedWidth < 1 {
+		selectedWidth = 1
+	}
+	if selectedHeight < 0 {
+		selectedHeight = 0
+	}
+
+	m.cardCols = selectedCols
+	m.cardInnerWidth = selectedWidth
+	m.cardInnerHeight = selectedHeight
 	for _, preview := range m.previews {
 		if preview.viewport != nil {
-			preview.viewport.SetWidth(innerWidth)
-			preview.viewport.SetHeight(innerHeight)
+			preview.viewport.SetWidth(m.cardInnerWidth)
+			preview.viewport.SetHeight(m.cardInnerHeight)
 		}
 	}
 }

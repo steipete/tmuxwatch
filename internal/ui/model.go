@@ -129,14 +129,16 @@ type Model struct {
 	hoveredSession string
 	hoveredControl string
 
-	viewMode      viewMode
-	detailSession string
-	activeTab     int
-	cardCols      int
-	previewOffset int
-	tabSessionIDs []string
-	footer        *viewport.Model
-	footerHeight  int
+	viewMode        viewMode
+	detailSession   string
+	activeTab       int
+	cardCols        int
+	cardInnerWidth  int
+	cardInnerHeight int
+	previewOffset   int
+	tabSessionIDs   []string
+	footer          *viewport.Model
+	footerHeight    int
 
 	debugMsgs  []tea.Msg
 	traceMouse bool
@@ -170,26 +172,28 @@ func NewModel(client *tmux.Client, poll time.Duration, debugMsgs []tea.Msg, trac
 	ti.CharLimit = 256
 	ti.Prompt = "/ "
 	return &Model{
-		client:        client,
-		pollInterval:  poll,
-		zonePrefix:    zone.NewPrefix(),
-		previews:      make(map[string]*sessionPreview),
-		hidden:        make(map[string]struct{}),
-		stale:         make(map[string]struct{}),
-		collapsed:     make(map[string]struct{}),
-		searchInput:   ti,
-		cardLayout:    make([]cardBounds, 0),
-		cardCols:      1,
-		inflight:      true,
-		previewOffset: topPaddingLines,
-		debugMsgs:     append([]tea.Msg(nil), debugMsgs...),
-		traceMouse:    traceMouse,
-		toast:         &toastState{},
-		viewMode:      viewModeOverview,
-		tabSessionIDs: make([]string, 0),
-		footer:        footerViewport(),
-		footerHeight:  3,
-		hostname:      lookupHostname(),
+		client:          client,
+		pollInterval:    poll,
+		zonePrefix:      zone.NewPrefix(),
+		previews:        make(map[string]*sessionPreview),
+		hidden:          make(map[string]struct{}),
+		stale:           make(map[string]struct{}),
+		collapsed:       make(map[string]struct{}),
+		searchInput:     ti,
+		cardLayout:      make([]cardBounds, 0),
+		cardCols:        1,
+		cardInnerWidth:  20,
+		cardInnerHeight: minPreviewHeight,
+		inflight:        true,
+		previewOffset:   topPaddingLines,
+		debugMsgs:       append([]tea.Msg(nil), debugMsgs...),
+		traceMouse:      traceMouse,
+		toast:           &toastState{},
+		viewMode:        viewModeOverview,
+		tabSessionIDs:   make([]string, 0),
+		footer:          footerViewport(),
+		footerHeight:    3,
+		hostname:        lookupHostname(),
 	}
 }
 

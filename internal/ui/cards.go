@@ -28,21 +28,22 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		return ""
 	}
 
-	cols := 1
-	if m.viewMode != viewModeDetail && len(sessions) > 1 && m.width >= 70 {
-		cols = 2
-	}
-	m.cardCols = cols
+	cols := max(1, m.cardCols)
 	m.ensureCursor(sessions)
 	baseStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(borderColorBase)).
 		Padding(0, cardPadding)
 
-	innerWidth := max(20, (m.width/cols)-(cardPadding*2+2))
+	innerWidth := m.cardInnerWidth
+	if innerWidth < 1 {
+		innerWidth = max(20, (m.width/cols)-(cardPadding*2+2))
+	}
 	cellWidth := innerWidth + cardPadding*2 + 2
-	rows := (len(sessions) + cols - 1) / cols
-	innerHeight := max(minPreviewHeight, (m.height-offset-3)/max(1, rows))
+	innerHeight := m.cardInnerHeight
+	if innerHeight < 0 {
+		innerHeight = 0
+	}
 
 	grid := make([][]string, 0)
 	now := time.Now()
@@ -61,8 +62,12 @@ func (m *Model) renderSessionPreviews(offset int) string {
 			continue
 		}
 
-		preview.viewport.SetWidth(innerWidth)
-		preview.viewport.SetHeight(innerHeight)
+		if preview.viewport.Width() != innerWidth {
+			preview.viewport.SetWidth(innerWidth)
+		}
+		if preview.viewport.Height() != innerHeight {
+			preview.viewport.SetHeight(innerHeight)
+		}
 
 		pulsing := now.Sub(preview.lastChanged) < pulseDuration
 		stale := m.isStale(session.ID)

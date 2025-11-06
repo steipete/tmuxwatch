@@ -69,10 +69,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				content = "Pane capture error: " + msg.err.Error()
 			}
 			if content != preview.lastContent {
+				wasAtBottom := preview.viewport.AtBottom()
 				preview.viewport.SetContent(content)
 				preview.lastContent = content
 				preview.lastChanged = time.Now()
-				preview.viewport.GotoBottom()
+				if wasAtBottom {
+					preview.viewport.GotoBottom()
+				}
 				m.updateStaleSessions()
 			}
 		}

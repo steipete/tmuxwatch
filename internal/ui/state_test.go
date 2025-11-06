@@ -2,6 +2,7 @@
 package ui
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
@@ -24,6 +25,25 @@ func TestTabTitles(t *testing.T) {
 	}
 	if titles[1] != "dev" {
 		t.Fatalf("session tab title = %q, want dev", titles[1])
+	}
+}
+
+// TestRenderTabBarWrapsWhenNarrow ensures the tab bar flows into multiple lines when constrained.
+func TestRenderTabBarWrapsWhenNarrow(t *testing.T) {
+	t.Parallel()
+
+	m := &Model{
+		sessions: []tmux.Session{
+			{ID: "s1", Name: "alpha"},
+			{ID: "s2", Name: "beta"},
+			{ID: "s3", Name: "gamma"},
+			{ID: "s4", Name: "delta"},
+		},
+		zonePrefix: "component",
+	}
+	rendered := m.renderTabBar(12)
+	if strings.Count(rendered, "\n") < 1 {
+		t.Fatalf("expected multiline tab bar, got %q", rendered)
 	}
 }
 
