@@ -27,12 +27,13 @@ func renderSearchSummary(query string) string {
 }
 
 // renderTitleBar constructs the application header with live metadata.
-func renderTitleBar(m *Model) string {
-	baseStyle := lipgloss.NewStyle().
+func renderTitleBar(m *Model, width int) string {
+	width = max(width, 1)
+
+	base := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("231")).
-		Background(lipgloss.Color("62")).
-		Padding(0, 2)
-	name := baseStyle.Bold(true).Render("tmuxwatch")
+		Background(lipgloss.Color("62"))
+	name := base.Copy().Bold(true).Padding(0, 2).Render("tmuxwatch")
 
 	metaParts := []string{fmt.Sprintf("%d sessions", len(m.sessions))}
 	if !m.lastUpdated.IsZero() {
@@ -44,13 +45,21 @@ func renderTitleBar(m *Model) string {
 	if m.searchQuery != "" {
 		metaParts = append(metaParts, fmt.Sprintf("filter %q", m.searchQuery))
 	}
-	if len(metaParts) == 0 {
-		return name
+	content := name
+	if len(metaParts) > 0 {
+		meta := base.Copy().
+			Padding(0, 2).
+			Foreground(lipgloss.Color("249")).
+			Render(strings.Join(metaParts, " • "))
+		content = lipgloss.JoinHorizontal(lipgloss.Left, content, meta)
 	}
-	meta := baseStyle.
-		Foreground(lipgloss.Color("249")).
-		Render(strings.Join(metaParts, " • "))
-	return lipgloss.JoinHorizontal(lipgloss.Left, name, meta)
+
+	remaining := width - lipgloss.Width(content)
+	if remaining > 0 {
+		padding := base.Render(strings.Repeat(" ", remaining))
+		content += padding
+	}
+	return content
 }
 
 // formatPaneVariables formats sorted tmux pane variables for display.

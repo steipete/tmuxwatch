@@ -24,7 +24,7 @@ func (m *Model) View() string {
 	targetHeight := max(m.height, 1)
 	padding := lipgloss.NewStyle().Width(targetWidth).Render(" ")
 
-	headerParts := []string{renderTitleBar(m)}
+	headerParts := []string{renderTitleBar(m, targetWidth)}
 	if m.searching {
 		headerParts = append(headerParts, renderSearchBar(m.searchInput))
 	} else if m.searchQuery != "" {
