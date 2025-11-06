@@ -35,7 +35,15 @@ func renderTitleBar(m *Model, width int) string {
 		Background(lipgloss.Color("62"))
 	name := base.Copy().Bold(true).Padding(0, 2).Render("tmuxwatch")
 
-	metaParts := []string{fmt.Sprintf("%d sessions", len(m.sessions))}
+	totalSessions := len(m.sessions)
+	staleCount := len(m.stale)
+	activeCount := totalSessions - staleCount
+	if activeCount < 0 {
+		activeCount = 0
+	}
+
+	summary := fmt.Sprintf("%d sessions (%d active, %d stale)", totalSessions, activeCount, staleCount)
+	metaParts := []string{summary}
 	if !m.lastUpdated.IsZero() {
 		metaParts = append(metaParts, fmt.Sprintf("refreshed %s ago", coarseDuration(time.Since(m.lastUpdated))))
 	}
