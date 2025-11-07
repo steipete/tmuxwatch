@@ -24,7 +24,8 @@
 - Run `go test ./...` locally and ensure new behaviour is covered; document edge cases in the test table comments when non-obvious.
 
 ## Commit & Pull Request Guidelines
-- Write commits in the imperative mood (`Add Bubble Tea layout helpers`), bundling related changes only.
+- Use [Conventional Commits v1.0](https://www.conventionalcommits.org/en/v1.0.0/) **without exception**. Allowed types: `feat|fix|refactor|build|ci|chore|docs|style|perf|test`. Variants such as `feat(ui): ...` or `chore!: ...` are welcome. Example messages: `feat: prevent racing of requests`, `chore!: drop support for iOS 16`, `feat(api): add basic telemetry`.
+- Write the description in the imperative mood and bundle only related changes per commit.
 - Reference relevant issues in commit bodies or PR descriptions.
 - PRs should summarize user-facing impact, list validation commands (`go test ./...`, `go run ./cmd/tmuxwatch --dump`), and attach screenshots/gifs if UI output changes.
 
