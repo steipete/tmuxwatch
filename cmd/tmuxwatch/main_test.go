@@ -1,26 +1,36 @@
 package main
 
 import (
+	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 )
 
+var testBinPath string
+
+func TestMain(m *testing.M) {
+	tmpDir, err := os.MkdirTemp("", "tmuxwatch-test-")
+	if err != nil {
+		log.Fatalf("failed to create temp dir for test binary: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	testBinPath = filepath.Join(tmpDir, "tmuxwatch-test")
+
+	buildCmd := exec.Command("go", "build", "-o", testBinPath, ".")
+	if output, err := buildCmd.CombinedOutput(); err != nil {
+		log.Fatalf("failed to build binary: %v\nOutput: %s", err, string(output))
+	}
+
+	os.Exit(m.Run())
+}
+
 // TestVersionFlag verifies --version outputs the version string and exits cleanly
 func TestVersionFlag(t *testing.T) {
-	cmd := exec.Command(os.Args[0], "-test.run=^$")
-	cmd.Args = append(cmd.Args, "--version")
-	cmd.Env = os.Environ()
-
-	// Build the binary first
-	buildCmd := exec.Command("go", "build", "-o", "/tmp/tmuxwatch-test", ".")
-	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("failed to build binary: %v", err)
-	}
-	defer os.Remove("/tmp/tmuxwatch-test")
-
-	cmd = exec.Command("/tmp/tmuxwatch-test", "--version")
+	cmd := exec.Command(testBinPath, "--version")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("--version flag failed: %v, output: %s", err, output)
@@ -62,16 +72,9 @@ func TestInvalidDebugClick(t *testing.T) {
 		},
 	}
 
-	// Build the binary once
-	buildCmd := exec.Command("go", "build", "-o", "/tmp/tmuxwatch-test", ".")
-	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("failed to build binary: %v", err)
-	}
-	defer os.Remove("/tmp/tmuxwatch-test")
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cmd := exec.Command("/tmp/tmuxwatch-test", "--debug-click", tt.value)
+			cmd := exec.Command(testBinPath, "--debug-click", tt.value)
 			output, err := cmd.CombinedOutput()
 
 			if err == nil {
@@ -88,13 +91,7 @@ func TestInvalidDebugClick(t *testing.T) {
 
 // TestInvalidIntervalFlag verifies invalid --interval values are rejected
 func TestInvalidIntervalFlag(t *testing.T) {
-	buildCmd := exec.Command("go", "build", "-o", "/tmp/tmuxwatch-test", ".")
-	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("failed to build binary: %v", err)
-	}
-	defer os.Remove("/tmp/tmuxwatch-test")
-
-	cmd := exec.Command("/tmp/tmuxwatch-test", "--interval", "invalid")
+	cmd := exec.Command(testBinPath, "--interval", "invalid")
 	output, err := cmd.CombinedOutput()
 
 	if err == nil {
@@ -102,26 +99,22 @@ func TestInvalidIntervalFlag(t *testing.T) {
 	}
 
 	outputStr := string(output)
-	if !strings.Contains(outputStr, "invalid") {
-		t.Errorf("expected error message about invalid interval, got: %s", outputStr)
+	if !strings.Contains(outputStr, "invalid value") {
+		t.Errorf("expected error message about invalid value, got: %s", outputStr)
 	}
 }
 
 // TestHelpFlag verifies -h/--help flags work
 func TestHelpFlag(t *testing.T) {
-	buildCmd := exec.Command("go", "build", "-o", "/tmp/tmuxwatch-test", ".")
-	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("failed to build binary: %v", err)
-	}
-	defer os.Remove("/tmp/tmuxwatch-test")
-
-	cmd := exec.Command("/tmp/tmuxwatch-test", "-h")
+	cmd := exec.Command(testBinPath, "-h")
 	output, err := cmd.CombinedOutput()
 
-	// -h exits with status 0 in flag package
+	if err != nil {
+		t.Fatalf("-h flag failed: %v, output: %s", err, output)
+	}
+
 	outputStr := string(output)
 	if !strings.Contains(outputStr, "Usage of") && !strings.Contains(outputStr, "interval") {
 		t.Errorf("expected help output to contain usage information, got: %s", outputStr)
 	}
-	_ = err // May or may not error depending on flag package behavior
 }
