@@ -121,9 +121,11 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // ensurePreviewsAndCapture keeps track of per-session previews and captures
 // fresh content for their active panes.
 func (m *Model) ensurePreviewsAndCapture() tea.Cmd {
+	captureOrder := m.captureOrder()
 	active := make(map[string]struct{}, len(m.sessions))
 	var cmds []tea.Cmd
-	for _, session := range m.sessions {
+	captureBudget := maxCapturesPerTick
+	for _, session := range captureOrder {
 		if m.isHidden(session.ID) {
 			continue
 		}
@@ -159,6 +161,15 @@ func (m *Model) ensurePreviewsAndCapture() tea.Cmd {
 		if collapsed && !isFocused && !inDetail {
 			shouldCapture = false
 		}
+
+		prioritized := isFocused || inDetail
+		if shouldCapture {
+			if !prioritized && captureBudget <= 0 {
+				shouldCapture = false
+			} else {
+				captureBudget--
+			}
+		}
 		if shouldCapture {
 			lines := captureLinesFor(preview.viewport.Height())
 			cmds = append(cmds, fetchPaneContentCmd(m.client, session.ID, pane.ID, lines))
@@ -176,6 +187,55 @@ func (m *Model) ensurePreviewsAndCapture() tea.Cmd {
 		return nil
 	}
 	return tea.Batch(cmds...)
+}
+
+// captureOrder returns sessions in the order we should attempt pane captures,
+// prioritising focused/detail sessions and rotating through the rest so work
+// is spread across ticks.
+func (m *Model) captureOrder() []tmux.Session {
+	if len(m.sessions) == 0 {
+		return nil
+	}
+
+	ordered := make([]tmux.Session, 0, len(m.sessions))
+	seen := make(map[string]struct{}, len(m.sessions))
+
+	add := func(id string) {
+		if id == "" {
+			return
+		}
+		if _, ok := seen[id]; ok {
+			return
+		}
+		if session, ok := m.sessionByID(id); ok {
+			ordered = append(ordered, session)
+			seen[id] = struct{}{}
+		}
+	}
+
+	add(m.focusedSession)
+	if m.viewMode == viewModeDetail {
+		add(m.detailSession)
+	}
+	add(m.cursorSession)
+
+	start := 0
+	if len(m.sessions) > 0 {
+		start = m.captureOffset % len(m.sessions)
+	}
+	for i := 0; i < len(m.sessions); i++ {
+		session := m.sessions[(start+i)%len(m.sessions)]
+		if _, ok := seen[session.ID]; ok {
+			continue
+		}
+		ordered = append(ordered, session)
+	}
+
+	if len(m.sessions) > 0 {
+		m.captureOffset = (start + 1) % len(m.sessions)
+	}
+
+	return ordered
 }
 
 // filteredSessions applies the active search filter and hidden toggles to the

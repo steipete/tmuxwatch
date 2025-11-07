@@ -18,6 +18,7 @@ import (
 const (
 	defaultPollInterval = time.Second
 	minPreviewHeight    = 6
+	maxCapturesPerTick  = 6
 	cardPadding         = 1
 	closeLabel          = "[x]"
 	maximizeLabel       = "[^]"
@@ -28,9 +29,9 @@ const (
 	pulseDuration       = 1500 * time.Millisecond
 	quitChordWindow     = 600 * time.Millisecond
 	staleThreshold      = time.Hour
-	minCaptureLines     = 120
-	maxCaptureLines     = 800
-	captureSlackLines   = 80
+	minCaptureLines     = 80
+	maxCaptureLines     = 600
+	captureSlackLines   = 40
 	borderColorBase     = "62"
 	borderColorFocus    = "212"
 	borderColorPulse    = "213"
@@ -108,6 +109,8 @@ type Model struct {
 	height int
 
 	sessions []tmux.Session
+
+	captureOffset int
 
 	previews  map[string]*sessionPreview
 	hidden    map[string]struct{}
