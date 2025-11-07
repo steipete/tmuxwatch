@@ -114,7 +114,6 @@ func (m *Model) updatePreviewDimensions(count int) {
 			selectedCols = cols
 			selectedWidth = innerWidth
 			selectedHeight = candidateHeight
-			foundFit = true
 			break
 		}
 	}
