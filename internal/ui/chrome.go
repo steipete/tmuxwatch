@@ -33,7 +33,7 @@ func renderTitleBar(m *Model, width int) string {
 	base := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("231")).
 		Background(lipgloss.Color("62"))
-	name := base.Copy().Bold(true).Padding(0, 2).Render("tmuxwatch")
+	name := base.Bold(true).Padding(0, 2).Render("tmuxwatch")
 
 	totalSessions := len(m.sessions)
 	staleCount := len(m.stale)
@@ -55,7 +55,7 @@ func renderTitleBar(m *Model, width int) string {
 	}
 	content := name
 	if len(metaParts) > 0 {
-		meta := base.Copy().
+		meta := base.
 			Padding(0, 2).
 			Foreground(lipgloss.Color("249")).
 			Render(strings.Join(metaParts, " • "))
