@@ -7,11 +7,17 @@ This project ships as a tagged GitHub release and as a Homebrew formula in `~/Pr
 2. Move unreleased notes into `CHANGELOG.md` under the new version heading.
 3. Run the full suite: `go test ./...` (add `staticcheck ./...` once the toolchain matches).
 4. Regenerate docs or assets if required, then commit the changes.
+5. Build release zips (from repo root):
+   - `make dist` (or `go build` equivalents); ensure `dist/tmuxwatch_darwin_amd64.zip` and `dist/tmuxwatch_darwin_arm64.zip` exist.
+   - Create checksums: `shasum -a 256 dist/tmuxwatch_darwin_*.zip > dist/tmuxwatch_darwin_sha256.txt` (include both architectures).
 
 ## 2. Tag and publish on GitHub
 1. Create an annotated tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`.
 2. Push main and the tag: `git push origin main --follow-tags`.
-3. Draft the GitHub release (notes can reuse the changelog entry) and attach any prebuilt binaries from `dist/` if needed.
+3. Draft the GitHub release (notes can reuse the changelog entry) and attach the built artifacts:
+   - `tmuxwatch_darwin_arm64.zip`
+   - `tmuxwatch_darwin_amd64.zip`
+   - `tmuxwatch_darwin_sha256.txt`
 
 ## 3. Update the Homebrew tap
 1. Switch to `~/Projects/homebrew-tap`.
