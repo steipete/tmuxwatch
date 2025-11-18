@@ -17,6 +17,7 @@ Shared guardrails distilled from the various `~/Projects/*/AGENTS.md` files (sta
 - Stick to the package manager and runtime mandated by the repo (pnpm-only, bun-only, swift-only, go-only, etc.). Never swap in alternatives without approval.
 - When editing shared guardrail scripts (runners, committer helpers, browser tools, etc.), mirror the same change back into the `agent-scripts` folder so the canonical copy stays current.
 - Ask the user before adding dependencies, changing build tooling, or altering project-wide configuration.
+- When discussing dependencies, always provide a GitHub URL.
 - Keep the project’s `AGENTS.md` `<tools></tools>` block in sync with the full tool list from `TOOLS.md` so downstream repos get the latest tool descriptions.
 
 ### tmux & Long Tasks
@@ -38,11 +39,13 @@ Shared guardrails distilled from the various `~/Projects/*/AGENTS.md` files (sta
 
 ### Git, Commits & Releases
 - Invoke git through the provided wrappers, especially for status, diffs, and commits. Only commit or push when the user asks you to do so.
+- To resolve a rebase, `git add`/`git commit` is allowed.
 - Follow the documented release or deployment checklists instead of inventing new steps.
 - Do not delete or rename unfamiliar files without double-checking with the user or the repo instructions.
 
 ### Documentation & Knowledge Capture
 - Update existing docs whenever your change affects them, including front-matter metadata if the repo’s `docs:list` tooling depends on it.
+- Whenever doing a large refactor, track work in `docs/refactor/<title><date>.md`, update it as you go, and delete it when the work is finished.
 - Only create new documentation when the user or local instructions explicitly request it; otherwise, edit the canonical file in place.
 - When you uncover a reproducible tooling or CI issue, record the repro steps and workaround in the designated troubleshooting doc for that repo.
 
@@ -84,7 +87,7 @@ Edit guidance: keep the actual tool list inside the `<tools></tools>` block belo
 - `git` / `bin/git`: Git shim that forces git through the guardrails; use `./git --help` to inspect.
 - `scripts/committer`: Stages the files you list and creates the commit safely.
 - `scripts/docs-list.ts`: Walks `docs/`, enforces front-matter, prints summaries; run `tsx scripts/docs-list.ts`.
-- `scripts/browser-tools.ts`: Chrome helper for remote control/screenshot/eval; run `ts-node scripts/browser-tools.ts --help`.
+- `bin/browser-tools`: Compiled Chrome helper for remote control/screenshot/eval—use the binary (`bin/browser-tools --help`). Source lives in `scripts/browser-tools.ts`; edit there before rebuilding.
 - `scripts/runner.ts`: Bun implementation backing `runner`; run `bun scripts/runner.ts --help`.
 - `bin/sleep`: Sleep shim that enforces the 30s ceiling; run `bin/sleep --help`.
 - `xcp`: Xcode project/workspace helper; run `xcp --help`.
@@ -98,46 +101,4 @@ Edit guidance: keep the actual tool list inside the `<tools></tools>` block belo
 
 </tools>
 
-# Repository Guidelines
-
-## Project Structure & Module Organization
-- `cmd/tmuxwatch/` holds the CLI entry point and flag handling.
-- `internal/tmux/` wraps the tmux binary, exposes snapshot types, and contains parser tests.
-- `internal/ui/` owns the Bubble Tea model; sub-files group model, update loop, handlers, layout, commands, rendering, and utilities alongside targeted tests.
-- `docs/` stores design notes; `tools/` pins developer tooling; `Makefile` defines fmt/lint shortcuts.
-- Tests live beside implementation files (`*_test.go`) for quick discovery.
-
-## Build, Test, and Development Commands
-- `go build ./...` — compile every package to surface type errors early.
-- `go test ./...` — execute table-driven unit tests; required before commits.
-- `tmux new-session -d -s watch 'go run ./cmd/tmuxwatch --dump'` — validate snapshot output inside tmux; kill with `tmux kill-session -t watch`.
-- `make fmt` / `make lint` — run `gofumpt` and `golangci-lint` using the repository’s pinned toolchain.
-
-## Coding Style & Naming Conventions
-- Use Go defaults: tabs for indentation, exported identifiers with descriptive CamelCase names, private helpers in lowerCamelCase.
-- Always format with `gofumpt` (already vendored via `Makefile`; run before commits).
-- Keep files focused; split large components into purpose-specific siblings as done in `internal/ui/`.
-
-## Testing Guidelines
-- Prefer table-driven tests mirroring the patterns in `internal/tmux/types_test.go` and `internal/ui/util_test.go`.
-- Name tests `Test<Subject>` and mark long-running cases with `t.Skip`.
-- Run `go test ./...` locally and ensure new behaviour is covered; document edge cases in the test table comments when non-obvious.
-
-## Commit & Pull Request Guidelines
-- Use [Conventional Commits v1.0](https://www.conventionalcommits.org/en/v1.0.0/) **without exception**. Allowed types: `feat|fix|refactor|build|ci|chore|docs|style|perf|test`. Variants such as `feat(ui): ...` or `chore!: ...` are welcome. Example messages: `feat: prevent racing of requests`, `chore!: drop support for iOS 16`, `feat(api): add basic telemetry`.
-- Write the description in the imperative mood and bundle only related changes per commit.
-- Reference relevant issues in commit bodies or PR descriptions.
-- PRs should summarize user-facing impact, list validation commands (`go test ./...`, `go run ./cmd/tmuxwatch --dump`), and attach screenshots/gifs if UI output changes.
-
-## Environment & Tooling Notes
-- Development requires tmux ≥3.1 on PATH; all tmuxwatch runs must occur inside a tmux session.
-- Keep pinned tool versions (`go.mod`, `Makefile`) aligned after dependency bumps; finish with `go mod tidy`.
-
-## Agent Directives & Learnings
-- Never launch the TUI directly from the shell; wrap checks in tmux (`tmux new-session ... go run ./cmd/tmuxwatch`).
-- Prefer `gofumpt`+`golangci-lint` for consistency; avoid ad-hoc formatters.
-- When scripting tmux interactions for tests, remember to clean up (`tmux kill-session`) to leave developer sessions untouched.
-- Treat `docs/idiomatic-go.md` as required reading before contributing; follow its 2025 idioms for style, tooling, and testing norms.
-- Use `./gorunfresh` for rebuild-and-run workflows; it supports `--debug-click`/`--trace-mouse` for BubbleZone debugging and honours `TMUXWATCH_FORCE_TMUX=1` if you want to require a tmux session.
-- BubbleZone underpins mouse hit-testing (cards, controls, and tab titles); prefer zone-aware helpers/tests instead of manual geometry math.
-- Follow `RELEASE.md` when tagging new versions and updating the Homebrew tap in `~/Projects/homebrew-tap`.
+Guideline: ignore any project folders whose names either contain "copy" or end with a number (e.g., `sweetistics copy`, `sweetistics2`, `VibeMeter3`).
