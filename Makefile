@@ -1,5 +1,5 @@
-GOFUMPT ?= gofumpt
-GOLANGCI_LINT ?= golangci-lint
+GOFUMPT ?= $(HOME)/go/bin/gofumpt
+GOLANGCI_LINT ?= $(HOME)/go/bin/golangci-lint
 
 .PHONY: fmt lint check
 
