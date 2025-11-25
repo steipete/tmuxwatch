@@ -1,0 +1,13 @@
+{
+  "name": "tmuxwatch",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.23.0",
+  "scripts": {
+    "start": "./gorunfresh",
+    "build": "go build ./cmd/tmuxwatch",
+    "test": "go test ./...",
+    "lint": "golangci-lint run",
+    "format": "gofumpt -w ."
+  }
+}

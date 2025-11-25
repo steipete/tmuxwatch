@@ -20,6 +20,11 @@ vendor/
 go.work
 go.work.sum
 
+# Node / pnpm
+node_modules/
+pnpm-debug.log
+.pnpm-store/
+
 # Environment files
 .env
 

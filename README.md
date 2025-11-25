@@ -64,6 +64,16 @@ mouse              click `[^]/[v]` to maximise/restore, `[-]/[+]` to collapse/ex
 The UI intentionally avoids third-party “magic”; it leans on Bubble Tea + Lip Gloss primitives so behaviour is explicit.
 
 ## Development Workflow
+Use the pnpm scripts to mirror the Go tooling:
+```sh
+pnpm format  # gofumpt -w .
+pnpm lint    # golangci-lint run
+pnpm test    # go test ./...
+pnpm build   # go build ./cmd/tmuxwatch
+pnpm start   # runs ./gorunfresh (prefer inside tmux)
+```
+
+You can still call the Go targets directly:
 ```sh
 # format + lint
 make fmt
