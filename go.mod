@@ -3,11 +3,10 @@ module github.com/steipete/tmuxwatch
 go 1.25.3
 
 require (
-	github.com/alexanderbh/bubbleapp v0.0.0-20250614150442-48f2f3cf3018
 	github.com/alexanderbh/bubblezone/v2 v2.0.0-20250522173625-92991368b8ed
 	github.com/charmbracelet/bubbles/v2 v2.0.0-beta.1.0.20250516174717-081e9986600c
-	github.com/charmbracelet/bubbletea/v2 v2.0.0-beta.3.0.20250516162618-b152063fd274
-	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta.1.0.20250516180252-2c4751e06ce4
+	github.com/charmbracelet/bubbletea/v2 v2.0.0-beta.6
+	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta.3
 	github.com/charmbracelet/x/cellbuf v0.0.14-0.20250505150409-97991a1f17d1
 	github.com/golangci/golangci-lint v1.64.8
 	mvdan.cc/gofumpt v0.9.2
@@ -48,9 +47,10 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/charmbracelet/colorprofile v0.3.2 // indirect
-	github.com/charmbracelet/x/ansi v0.10.3 // indirect
-	github.com/charmbracelet/x/input v0.3.5-0.20250509021451-13796e822d86 // indirect
+	github.com/charmbracelet/ultraviolet v0.0.0-20251017140847-d4ace4d6e731 // indirect
+	github.com/charmbracelet/x/ansi v0.10.2 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
+	github.com/charmbracelet/x/termios v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.2.2 // indirect
 	github.com/chavacava/garif v0.1.0 // indirect
 	github.com/ckaznocha/intrange v0.3.0 // indirect
@@ -199,8 +199,8 @@ require (
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20250210185358-939b2ce775ac // indirect
 	golang.org/x/mod v0.29.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
 	golang.org/x/tools v0.38.0 // indirect
 	golang.org/x/tools/go/expect v0.1.1-deprecated // indirect
@@ -212,5 +212,3 @@ require (
 	honnef.co/go/tools v0.6.1 // indirect
 	mvdan.cc/unparam v0.0.0-20240528143540-8a5130ca722f // indirect
 )
-
-replace github.com/charmbracelet/x/ansi => github.com/charmbracelet/x/ansi v0.9.1

@@ -63,7 +63,6 @@ func (m *Model) updatePreviewDimensions(count int) {
 	selectedCols := 1
 	selectedHeight := 0
 	selectedWidth := max(1, m.width-columnOverhead)
-	foundFit := false
 
 	for cols := maxCols; cols >= 1; cols-- {
 		columnWidth := m.width / cols
@@ -97,7 +96,7 @@ func (m *Model) updatePreviewDimensions(count int) {
 		}
 
 		predicted := rows * (frameHeight + candidateHeight)
-		if !foundFit {
+		if cols == maxCols {
 			selectedCols = cols
 			selectedWidth = innerWidth
 			selectedHeight = candidateHeight
@@ -114,7 +113,6 @@ func (m *Model) updatePreviewDimensions(count int) {
 			selectedCols = cols
 			selectedWidth = innerWidth
 			selectedHeight = candidateHeight
-			foundFit = true
 			break
 		}
 	}

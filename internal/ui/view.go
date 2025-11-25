@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	zone "github.com/alexanderbh/bubblezone/v2"
+	tea "github.com/charmbracelet/bubbletea/v2"
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
@@ -15,9 +16,9 @@ const (
 
 // View renders the entire tmuxwatch interface, including title bar, search
 // state, session previews, status footer, and overlays.
-func (m *Model) View() string {
+func (m *Model) View() tea.View {
 	if m.width == 0 || m.height == 0 {
-		return "loading..."
+		return tea.NewView("loading...")
 	}
 
 	targetWidth := max(m.width, 1)
@@ -88,19 +89,22 @@ func (m *Model) View() string {
 		m.logCardLayout()
 	}
 
-	if !m.paletteOpen {
-		return zone.Scan(view)
+	if m.paletteOpen {
+		palette := m.renderCommandPalette()
+		paletteWidth := lipgloss.Width(palette)
+		paletteHeight := countLines(palette)
+		width := max(m.width, max(lipgloss.Width(view), paletteWidth))
+		height := max(m.height, max(countLines(view), paletteHeight))
+		offsetX := max((width-paletteWidth)/2, 0)
+		offsetY := max((height-paletteHeight)/2, 0)
+
+		view = overlayView(view, palette, width, height, offsetX, offsetY)
 	}
 
-	palette := m.renderCommandPalette()
-	paletteWidth := lipgloss.Width(palette)
-	paletteHeight := countLines(palette)
-	width := max(m.width, max(lipgloss.Width(view), paletteWidth))
-	height := max(m.height, max(countLines(view), paletteHeight))
-	offsetX := max((width-paletteWidth)/2, 0)
-	offsetY := max((height-paletteHeight)/2, 0)
-
-	return zone.Scan(overlayView(view, palette, width, height, offsetX, offsetY))
+	content := tea.NewView(zone.Scan(view))
+	content.AltScreen = true
+	content.MouseMode = tea.MouseModeAllMotion
+	return content
 }
 
 func clampHeight(content string, limit int) string {
