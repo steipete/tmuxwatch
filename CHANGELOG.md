@@ -1,10 +1,13 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
 ## [Unreleased]
+
+### Added
+- `pnpm start`, `build`, `test`, `lint`, and `format` scripts for a uniform local workflow alongside the Go tooling.
+
+### Changed
+- Updated the Charmbracelet stack (Bubble Tea v2.0.0-beta.6, Lip Gloss v2.0.0-beta.3, x/cellbuf prerelease) and aligned the UI to the new `tea.View` API (alt-screen & mouse mode now set on the view).
+- Refreshed lint fixes and layout helpers to match the upstream API changes.
 
 ## [0.9.2] - 2025-11-05
 
