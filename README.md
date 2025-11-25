@@ -1,4 +1,4 @@
-# tmuxwatch 👀
+# tmuxwatch 👀 - Lightweight TUI to watch tmux sessions
 
 `tmuxwatch` is a Charmbracelet-powered dashboard that keeps eyes on every tmux session, window, and pane without ever leaving the terminal.
 
