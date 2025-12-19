@@ -1,0 +1,35 @@
+version: 2
+
+project_name: tmuxwatch
+
+changelog:
+  disable: true
+
+builds:
+  - id: tmuxwatch
+    main: ./cmd/tmuxwatch
+    binary: tmuxwatch
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - builds:
+      - tmuxwatch
+    format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: checksums.txt
