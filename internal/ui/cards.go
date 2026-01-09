@@ -79,7 +79,7 @@ func (m *Model) renderSessionPreviews(offset int) string {
 		closeID := fmt.Sprintf("%sclose:%s", m.zonePrefix, session.ID)
 		maxID := fmt.Sprintf("%smax:%s", m.zonePrefix, session.ID)
 		collapseID := fmt.Sprintf("%scollapse:%s", m.zonePrefix, session.ID)
-		showCollapse := !(m.viewMode == viewModeDetail && m.detailSession == session.ID)
+		showCollapse := m.viewMode != viewModeDetail || m.detailSession != session.ID
 
 		maxLabel := maximizeLabel
 		if m.viewMode == viewModeDetail && m.detailSession == session.ID {
