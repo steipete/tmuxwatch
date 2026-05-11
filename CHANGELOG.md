@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- Added Nix flake packaging for `nix run` installs and NixOS/system integration (thanks @mipmip).
 - `pnpm start`, `build`, `test`, `lint`, and `format` scripts for a uniform local workflow alongside the Go tooling.
 
 ### Changed

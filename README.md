@@ -23,6 +23,13 @@ brew upgrade tmuxwatch
 # Or install directly with Go tooling
 go install github.com/steipete/tmuxwatch/cmd/tmuxwatch@latest
 
+# Nix/NixOS
+nix run github:steipete/tmuxwatch
+
+# Or add to your flake inputs for system integration
+# inputs.tmuxwatch.url = "github:steipete/tmuxwatch";
+# Then use: inputs.tmuxwatch.packages.${system}.default
+
 # best practice: spawn inside tmux so key bindings work as expected
 tmux new-session -d -s watch './gorunfresh --trace-mouse'
 tmux attach -t watch
