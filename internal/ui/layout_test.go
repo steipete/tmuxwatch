@@ -4,7 +4,7 @@ package ui
 import (
 	"testing"
 
-	"github.com/charmbracelet/bubbles/v2/viewport"
+	"charm.land/bubbles/v2/viewport"
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )
 

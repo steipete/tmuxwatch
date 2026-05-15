@@ -4,9 +4,9 @@ package ui
 import (
 	"strings"
 
-	zone "github.com/alexanderbh/bubblezone/v2"
-	tea "github.com/charmbracelet/bubbletea/v2"
-	"github.com/charmbracelet/lipgloss/v2"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
+	zone "github.com/steipete/tmuxwatch/internal/zone"
 )
 
 const (

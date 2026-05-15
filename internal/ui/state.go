@@ -4,8 +4,8 @@ package ui
 import (
 	"fmt"
 
-	zone "github.com/alexanderbh/bubblezone/v2"
-	"github.com/charmbracelet/lipgloss/v2"
+	"charm.land/lipgloss/v2"
+	zone "github.com/steipete/tmuxwatch/internal/zone"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )

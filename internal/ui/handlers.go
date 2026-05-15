@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	zone "github.com/alexanderbh/bubblezone/v2"
-	tea "github.com/charmbracelet/bubbletea/v2"
+	tea "charm.land/bubbletea/v2"
+	zone "github.com/steipete/tmuxwatch/internal/zone"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )

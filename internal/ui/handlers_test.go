@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	zone "github.com/alexanderbh/bubblezone/v2"
-	"github.com/charmbracelet/bubbles/v2/viewport"
-	tea "github.com/charmbracelet/bubbletea/v2"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
+	zone "github.com/steipete/tmuxwatch/internal/zone"
 
 	"github.com/steipete/tmuxwatch/internal/tmux"
 )

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	zone "github.com/alexanderbh/bubblezone/v2"
-	tea "github.com/charmbracelet/bubbletea/v2"
+	tea "charm.land/bubbletea/v2"
+	zone "github.com/steipete/tmuxwatch/internal/zone"
 )
 
 // logMouseEvent prints mouse hit testing diagnostics when trace mode is on.
