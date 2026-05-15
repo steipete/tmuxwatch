@@ -16,8 +16,6 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("failed to create temp dir for test binary: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
-
 	testBinPath = filepath.Join(tmpDir, "tmuxwatch-test")
 
 	buildCmd := exec.Command("go", "build", "-o", testBinPath, ".")
@@ -25,7 +23,14 @@ func TestMain(m *testing.M) {
 		log.Fatalf("failed to build binary: %v\nOutput: %s", err, string(output))
 	}
 
-	os.Exit(m.Run())
+	code := m.Run()
+	if err := os.RemoveAll(tmpDir); err != nil {
+		log.Printf("failed to remove test temp dir %s: %v", tmpDir, err)
+		if code == 0 {
+			code = 1
+		}
+	}
+	os.Exit(code)
 }
 
 // TestVersionFlag verifies --version outputs the version string and exits cleanly
@@ -108,7 +113,6 @@ func TestInvalidIntervalFlag(t *testing.T) {
 func TestHelpFlag(t *testing.T) {
 	cmd := exec.Command(testBinPath, "-h")
 	output, err := cmd.CombinedOutput()
-
 	if err != nil {
 		t.Fatalf("-h flag failed: %v, output: %s", err, output)
 	}

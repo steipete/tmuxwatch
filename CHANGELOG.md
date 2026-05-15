@@ -5,6 +5,7 @@
 ### Added
 - Added Nix flake packaging for `nix run` installs and NixOS/system integration (thanks @mipmip).
 - `pnpm start`, `build`, `test`, `lint`, and `format` scripts for a uniform local workflow alongside the Go tooling.
+- GitHub Actions CI for formatting, tests, and lint checks on pull requests and `main`.
 
 ### Changed
 - Updated the Charmbracelet stack (Bubble Tea v2.0.0-beta.6, Lip Gloss v2.0.0-beta.3, x/cellbuf prerelease) and aligned the UI to the new `tea.View` API (alt-screen & mouse mode now set on the view).
