@@ -1,11 +1,8 @@
-version: 2
+version: "2"
 
 run:
   timeout: 5m
   go: "1.25"
-
-issues:
-  exclude-use-default: false
 
 linters:
   enable:
@@ -18,7 +15,7 @@ linters:
   disable:
     - depguard
 
-linters-settings:
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
