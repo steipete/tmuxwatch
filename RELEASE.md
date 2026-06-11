@@ -1,34 +1,27 @@
 # Release Guide
 
-This project ships as a tagged GitHub release and as a Homebrew formula in `~/Projects/homebrew-tap`.
+This project ships from an annotated Git tag through GitHub Actions, GoReleaser, and the Homebrew tap update workflow.
 
 ## 1. Prep the repository
 1. Update `cmd/tmuxwatch/main.go` with the new semantic version.
-2. Move unreleased notes into `CHANGELOG.md` under the new version heading.
-3. Run the full suite: `go test ./...` (add `staticcheck ./...` once the toolchain matches).
-4. Regenerate docs or assets if required, then commit the changes.
-5. Build release zips (from repo root):
-   - `make dist` (or `go build` equivalents); ensure `dist/tmuxwatch_darwin_amd64.zip` and `dist/tmuxwatch_darwin_arm64.zip` exist.
-   - Create checksums: `shasum -a 256 dist/tmuxwatch_darwin_*.zip > dist/tmuxwatch_darwin_sha256.txt` (include both architectures).
+2. Update package metadata such as `flake.nix` and version examples in `README.md`.
+3. Move unreleased notes into `CHANGELOG.md` under the new version heading.
+4. Run formatting, `go test ./...`, `golangci-lint run`, cross-platform builds, and a GoReleaser snapshot.
+5. Live-test the snapshot binary against a real tmux session, then commit and push the release prep.
+6. Require green `main` CI, a clean checkout, and an empty GitHub issue/PR queue.
 
 ## 2. Tag and publish on GitHub
 1. Create an annotated tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`.
-2. Push main and the tag: `git push origin main --follow-tags`.
-3. Draft the GitHub release (notes can reuse the changelog entry) and attach the built artifacts:
-   - `tmuxwatch_darwin_arm64.zip`
-   - `tmuxwatch_darwin_amd64.zip`
-   - `tmuxwatch_darwin_sha256.txt`
+2. Push the tag: `git push origin vX.Y.Z`.
+3. Watch the `release` workflow. GoReleaser publishes macOS, Linux, and Windows archives plus `checksums.txt`.
+4. Set the GitHub Release notes from the matching changelog entry and verify the new release is marked latest.
 
 ## 3. Update the Homebrew tap
-1. Switch to `~/Projects/homebrew-tap`.
-2. Edit `Formula/tmuxwatch.rb`:
-   - Set `url` to `https://github.com/steipete/tmuxwatch/archive/refs/tags/vX.Y.Z.tar.gz`.
-   - Recalculate `sha256`: `curl -L $url | shasum -a 256`.
-   - Update the `test do` assertion to expect the new version string.
-3. Commit and push: `git commit -am "Update tmuxwatch formula to X.Y.Z" && git push`.
-4. Verify the formula builds: `brew install --build-from-source steipete/tap/tmuxwatch`.
+1. The release workflow dispatches `steipete/homebrew-tap` after GoReleaser succeeds.
+2. Verify `Formula/tmuxwatch.rb` references the new release assets, checksums, and version assertion.
+3. Run `brew reinstall steipete/tap/tmuxwatch` and `brew test steipete/tap/tmuxwatch`.
 
 ## 4. Post-release checks
-- Confirm Dependabot/GH Actions succeed.
-- Announce the release or update internal docs as needed.
-- If issues arise, cut a follow-up patch release and repeat these steps.
+- Verify the tag, GitHub Release, assets, checksums, release notes, release workflow, and Homebrew workflow.
+- Restore an empty `Unreleased` changelog section for the next patch, commit, and push.
+- Confirm `main` CI is green and the final checkout is clean.

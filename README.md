@@ -14,7 +14,7 @@
 # Homebrew (recommended)
 brew tap steipete/tap
 brew install tmuxwatch
-tmuxwatch --version  # should print tmuxwatch 0.9
+tmuxwatch --version  # should print tmuxwatch 0.9.3
 
 # Updating later
 brew update

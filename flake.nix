@@ -23,11 +23,11 @@
         {
           tmuxwatch = pkgs.buildGoModule {
             pname = "tmuxwatch";
-            version = "0.9.1";
+            version = "0.9.3";
 
             src = ./.;
 
-            vendorHash = "sha256-hNszgsQ4lZ6NinZs3IiPnYf3Jl/eSSLyBSw2wiLqyDc=";
+            vendorHash = "sha256-Kad31OpV/RA8K1vY7qlBM7t0sA2R/Z7UWFANnpFx8i8=";
 
             subPackages = [ "cmd/tmuxwatch" ];
 

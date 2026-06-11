@@ -1,16 +1,24 @@
 # Changelog
 
-## [Unreleased]
+## [0.9.3] - 2026-06-11
 
 ### Added
 - Added Nix flake packaging for `nix run` installs and NixOS/system integration (thanks @mipmip).
+- Added Poltergeist-powered hot reload helpers for local tmuxwatch development.
 - `pnpm start`, `build`, `test`, `lint`, and `format` scripts for a uniform local workflow alongside the Go tooling.
+- Added CLI flag integration tests and full-path Makefile tool resolution (thanks @micahstubbs).
 - GitHub Actions CI for formatting, tests, and lint checks on pull requests and `main`.
+- Added GoReleaser archives for macOS, Linux, and Windows, with automatic Homebrew tap updates.
 
 ### Changed
-- Updated the Charmbracelet stack (Bubble Tea v2.0.0-beta.6, Lip Gloss v2.0.0-beta.3, x/cellbuf prerelease) and aligned the UI to the new `tea.View` API (alt-screen & mouse mode now set on the view).
-- Refreshed lint fixes and layout helpers to match the upstream API changes.
+- Updated the Charmbracelet stack and aligned the UI with the stable `tea.View` API, including an internal mouse-zone adapter for the new module paths.
+- Made the dashboard layout more adaptive with wrapped tabs, centered empty state content, stretched headers, and active/stale session counts.
+- Reduced pane capture load, rotated background capture work, preserved manual scroll positions, and truncated oversized stale-session footer summaries.
+- Expanded tmux no-server detection for macOS socket errors.
 - Updated Go dependencies, Nix lockfile, pnpm package-manager pin, and GitHub Actions versions.
+
+### Fixed
+- Validate `--debug-click` before tmux discovery so argument errors work without an installed tmux binary and Nix package checks pass.
 
 ## [0.9.2] - 2025-11-05
 

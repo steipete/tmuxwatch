@@ -18,7 +18,7 @@ import (
 	"github.com/steipete/tmuxwatch/internal/ui"
 )
 
-var version = "0.9.1"
+var version = "0.9.3"
 
 // main configures the tmux client, handles flag modes, and launches Bubble Tea.
 func main() {
@@ -36,30 +36,6 @@ func main() {
 
 	if *showVer {
 		fmt.Println("tmuxwatch", version)
-		return
-	}
-
-	client, err := tmux.NewClient(*tmuxBin)
-	// If tmux isn't running, inform the user early.
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to set up tmux client: %v\n", err)
-		os.Exit(1)
-	}
-
-	if *dump {
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		defer cancel()
-		snap, err := client.Snapshot(ctx)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed to fetch tmux snapshot: %v\n", err)
-			os.Exit(1)
-		}
-		enc := json.NewEncoder(os.Stdout)
-		enc.SetIndent("", "  ")
-		if err := enc.Encode(snap); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to encode snapshot: %v\n", err)
-			os.Exit(1)
-		}
 		return
 	}
 
@@ -84,6 +60,30 @@ func main() {
 		if !*traceMouse {
 			*traceMouse = true
 		}
+	}
+
+	client, err := tmux.NewClient(*tmuxBin)
+	// If tmux isn't running, inform the user early.
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to set up tmux client: %v\n", err)
+		os.Exit(1)
+	}
+
+	if *dump {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		snap, err := client.Snapshot(ctx)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to fetch tmux snapshot: %v\n", err)
+			os.Exit(1)
+		}
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		if err := enc.Encode(snap); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to encode snapshot: %v\n", err)
+			os.Exit(1)
+		}
+		return
 	}
 
 	model := ui.NewModel(client, *interval, debugMsgs, *traceMouse)
