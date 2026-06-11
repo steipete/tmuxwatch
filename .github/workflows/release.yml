@@ -10,12 +10,18 @@ on:
         description: "Tag to (re)release (e.g. v0.1.0)"
         required: true
         type: string
+      homebrew_only:
+        description: "Skip GoReleaser and only dispatch the Homebrew tap update"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
 
 jobs:
   goreleaser:
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.homebrew_only }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -46,6 +52,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   update-homebrew-tap:
+    if: ${{ always() && (needs.goreleaser.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.homebrew_only)) }}
     runs-on: ubuntu-latest
     needs: goreleaser
     steps:
@@ -99,7 +106,4 @@ jobs:
             exit 1
           fi
 
-          gh run watch "$run_id" \
-            --repo steipete/homebrew-tap \
-            --exit-status \
-            --interval 10
+          echo "Dispatched Homebrew workflow: https://github.com/steipete/homebrew-tap/actions/runs/$run_id"

@@ -18,8 +18,10 @@ This project ships from an annotated Git tag through GitHub Actions, GoReleaser,
 
 ## 3. Update the Homebrew tap
 1. The release workflow dispatches `steipete/homebrew-tap` after GoReleaser succeeds.
-2. Verify `Formula/tmuxwatch.rb` references the new release assets, checksums, and version assertion.
-3. Run `brew reinstall steipete/tap/tmuxwatch` and `brew test steipete/tap/tmuxwatch`.
+2. Verify the linked tap workflow succeeds; cross-repository dispatch is asynchronous and is not polled by the release workflow.
+3. If release assets already exist and only the tap dispatch needs retrying, run `gh workflow run release.yml --ref main -f tag=vX.Y.Z -f homebrew_only=true`.
+4. Verify `Formula/tmuxwatch.rb` references the new release assets, checksums, and version assertion.
+5. Run `brew reinstall steipete/tap/tmuxwatch` and `brew test steipete/tap/tmuxwatch`.
 
 ## 4. Post-release checks
 - Verify the tag, GitHub Release, assets, checksums, release notes, release workflow, and Homebrew workflow.
