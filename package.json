@@ -2,7 +2,7 @@
   "name": "tmuxwatch",
   "version": "0.0.0",
   "private": true,
-  "packageManager": "pnpm@11.1.2",
+  "packageManager": "pnpm@11.9.0",
   "scripts": {
     "start": "./gorunfresh",
     "build": "go build ./cmd/tmuxwatch",
