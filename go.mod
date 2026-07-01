@@ -1,6 +1,6 @@
 module github.com/steipete/tmuxwatch
 
-go 1.25.3
+go 1.25.11
 
 require (
 	charm.land/bubbles/v2 v2.1.0
