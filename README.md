@@ -2,6 +2,8 @@
 
 `tmuxwatch` is a Charmbracelet-powered dashboard that keeps eyes on every tmux session, window, and pane without ever leaving the terminal.
 
+Product principles and scope boundaries live in [`VISION.md`](VISION.md); detailed architecture and roadmap notes live in [`docs/spec.md`](docs/spec.md).
+
 ## Highlights
 - **Live tmux snapshot**: Polls `list-sessions`, `list-windows`, and `list-panes`, stitches the hierarchy together, and shows the latest capture-pane output per session.
 - **Tab-aware layout**: The strip lists the grid plus every visible tmux session; click or `shift+left/right` to jump tabs, `ctrl+m` toggles full-screen, and `esc` returns to the grid.

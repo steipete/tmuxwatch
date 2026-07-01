@@ -1,5 +1,7 @@
 # tmuxwatch Spec
 
+Durable product principles and scope boundaries live in [`VISION.md`](../VISION.md). This document keeps the detailed architecture, terminology, migration history, and exploratory roadmap.
+
 ## Migration Status (2025-11-05)
 
 - **UI Framework Refresh**: Bubble Tea/Bubbles/Lip Gloss have been upgraded to their v2 beta line, BubbleZone v2 now powers all hit-testing, and BubbleApp tab titles are integrated. Mouse/tab instability regressions have been triaged; remaining follow-up is to expose BubbleApp tab actions beyond clicks (keyboard focus, palette hooks).
