@@ -10,29 +10,43 @@ import (
 	"time"
 )
 
-var (
-	execCommand = func(ctx context.Context, name string, args ...string) *exec.Cmd {
-		return exec.CommandContext(ctx, name, args...)
-	}
-	lookPath = exec.LookPath
-)
+type commandRunner func(context.Context, string, ...string) ([]byte, error)
+
+type pathLookup func(string) (string, error)
 
 // Client wraps a tmux binary path and exposes high-level snapshot helpers.
 type Client struct {
 	bin string
+	run commandRunner
 }
 
 // NewClient constructs a Client using the provided tmux binary. When tmuxPath
 // is empty, LookPath("tmux") is used so the system PATH controls discovery.
 func NewClient(tmuxPath string) (*Client, error) {
+	return newClient(tmuxPath, exec.LookPath)
+}
+
+func newClient(tmuxPath string, lookup pathLookup) (*Client, error) {
 	if tmuxPath == "" {
 		var err error
-		tmuxPath, err = lookPath("tmux")
+		tmuxPath, err = lookup("tmux")
 		if err != nil {
 			return nil, fmt.Errorf("tmux not found in PATH (install tmux >=3.1): %w", err)
 		}
 	}
-	return &Client{bin: tmuxPath}, nil
+	return &Client{bin: tmuxPath, run: runCommand}, nil
+}
+
+func runCommand(ctx context.Context, bin string, args ...string) ([]byte, error) {
+	return exec.CommandContext(ctx, bin, args...).Output()
+}
+
+func (c *Client) runTmux(ctx context.Context, args ...string) ([]byte, error) {
+	runner := c.run
+	if runner == nil {
+		runner = runCommand
+	}
+	return runner(ctx, c.bin, args...)
 }
 
 // Snapshot queries tmux for sessions, windows, and panes and returns a unified

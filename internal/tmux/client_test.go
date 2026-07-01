@@ -10,13 +10,9 @@ import (
 func TestNewClientMissingTmux(t *testing.T) {
 	t.Parallel()
 
-	oldLookPath := lookPath
-	lookPath = func(string) (string, error) {
+	_, err := newClient("", func(string) (string, error) {
 		return "", exec.ErrNotFound
-	}
-	t.Cleanup(func() { lookPath = oldLookPath })
-
-	_, err := NewClient("")
+	})
 	if err == nil {
 		t.Fatal("expected error when tmux is missing")
 	}
@@ -28,13 +24,10 @@ func TestNewClientMissingTmux(t *testing.T) {
 func TestListSessionsNoServer(t *testing.T) {
 	t.Parallel()
 
-	oldRun := runCommand
-	runCommand = func(context.Context, string, ...string) ([]byte, error) {
+	c := &Client{bin: "tmux", run: func(context.Context, string, ...string) ([]byte, error) {
 		return nil, &exec.ExitError{Stderr: []byte("failed to connect to server")}
-	}
-	t.Cleanup(func() { runCommand = oldRun })
+	}}
 
-	c := &Client{bin: "tmux"}
 	sessions, err := c.listSessions(context.Background())
 	if err != nil {
 		t.Fatalf("listSessions returned error: %v", err)
@@ -47,13 +40,10 @@ func TestListSessionsNoServer(t *testing.T) {
 func TestListWindowsNoServer(t *testing.T) {
 	t.Parallel()
 
-	oldRun := runCommand
-	runCommand = func(context.Context, string, ...string) ([]byte, error) {
+	c := &Client{bin: "tmux", run: func(context.Context, string, ...string) ([]byte, error) {
 		return nil, &exec.ExitError{Stderr: []byte("no server running")}
-	}
-	t.Cleanup(func() { runCommand = oldRun })
+	}}
 
-	c := &Client{bin: "tmux"}
 	windows, err := c.listWindows(context.Background())
 	if err != nil {
 		t.Fatalf("listWindows returned error: %v", err)
@@ -66,13 +56,10 @@ func TestListWindowsNoServer(t *testing.T) {
 func TestListPanesNoServer(t *testing.T) {
 	t.Parallel()
 
-	oldRun := runCommand
-	runCommand = func(context.Context, string, ...string) ([]byte, error) {
+	c := &Client{bin: "tmux", run: func(context.Context, string, ...string) ([]byte, error) {
 		return nil, &exec.ExitError{Stderr: []byte("failed to connect to server")}
-	}
-	t.Cleanup(func() { runCommand = oldRun })
+	}}
 
-	c := &Client{bin: "tmux"}
 	panes, err := c.listPanes(context.Background())
 	if err != nil {
 		t.Fatalf("listPanes returned error: %v", err)
