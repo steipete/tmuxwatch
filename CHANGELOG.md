@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed
+- Updated the Go toolchain, Nix package set, Charmbracelet TUI stack, and pnpm development tooling to their latest stable releases.
+
 ## [0.9.3] - 2026-06-11
 
 ### Added
