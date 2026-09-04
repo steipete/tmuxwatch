@@ -137,7 +137,7 @@ func (m *Model) buildCommandItems() []commandItem {
 			m.searching = true
 			m.searchInput.SetValue(m.searchQuery)
 			m.searchInput.CursorEnd()
-			return nil
+			return m.searchInput.Focus()
 		},
 	})
 
