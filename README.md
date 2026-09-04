@@ -73,6 +73,8 @@ mouse              click `[^]/[v]` to maximise/restore, `[-]/[+]` to collapse/ex
 The UI intentionally avoids third-party “magic”; it leans on Bubble Tea + Lip Gloss primitives so behaviour is explicit.
 
 ## Development Workflow
+Source builds support Go 1.25.12 or newer; the preferred Go 1.25.14 toolchain is recorded in `go.mod`. CI tests both versions. Nix builds use the Go compiler provided by the locked Nix package set.
+
 Use the pnpm scripts to mirror the Go tooling:
 ```sh
 pnpm format  # gofumpt -w .

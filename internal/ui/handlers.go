@@ -83,7 +83,7 @@ func (m *Model) handleGlobalKey(msg tea.KeyMsg) (bool, tea.Cmd) {
 		m.searching = true
 		m.searchInput.SetValue(m.searchQuery)
 		m.searchInput.CursorEnd()
-		return true, nil
+		return true, m.searchInput.Focus()
 	case "esc":
 		if m.viewMode == viewModeDetail && m.activeTab == 1 {
 			m.leaveDetail(false)

@@ -27,7 +27,7 @@
 
             src = ./.;
 
-            vendorHash = "sha256-AjaEPUd/Zn/pRz2rgNkBE8dXzg5oZq5U5f5fnkrLknI=";
+            vendorHash = "sha256-+PqwEfWS7eLpyV0eO1B5qvMqFElv/YTHrmJvujF3Y1w=";
 
             subPackages = [ "cmd/tmuxwatch" ];
 
