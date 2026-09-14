@@ -18,7 +18,7 @@ Release binaries for macOS require macOS 12 or newer and are Developer ID signed
 # Homebrew (recommended)
 brew tap steipete/tap
 brew install tmuxwatch
-tmuxwatch --version  # should print tmuxwatch 0.10.0
+tmuxwatch --version  # should print tmuxwatch 0.10.1
 
 # Updating later
 brew update
