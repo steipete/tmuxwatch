@@ -1,14 +1,16 @@
 # Changelog
 
-## [Unreleased]
+## [0.10.0] - 2026-09-13
 
-### Changed
-- Updated the Go toolchain, Nix package set, Charmbracelet TUI stack, and pnpm development tooling to their latest stable releases.
-- Refreshed the Charmbracelet TUI libraries for terminal redraw, keyboard restoration, and Unicode width fixes; updated gofumpt and pnpm, and prefer Go 1.25.14 while retaining Go 1.25.12 source compatibility.
+**Highlights:** Search reliably accepts typing, with TUI redraw, keyboard restoration, and Unicode width fixes.
 
 ### Fixed
 - Search now accepts typing when opened or reopened with `/`, `ctrl+f`, or the command palette.
 - Restored the compatible go-header dependency so the pinned golangci-lint tool also builds from the repository's module graph.
+
+### Changed
+- Refreshed the Charmbracelet TUI libraries for terminal redraw, keyboard restoration, and Unicode width fixes; updated gofumpt and pnpm, and prefer Go 1.25.14 while retaining Go 1.25.12 source compatibility.
+- Updated the Go toolchain, Nix package set, Charmbracelet TUI stack, and pnpm development tooling to their latest stable releases.
 
 ## [0.9.3] - 2026-06-11
 

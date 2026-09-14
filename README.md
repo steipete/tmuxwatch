@@ -12,11 +12,13 @@ Product principles and scope boundaries live in [`VISION.md`](VISION.md); detail
 - **Automation friendly**: `--dump` prints the current tmux topology as JSON for scripts or debugging.
 
 ## Install & Run
+Release binaries for macOS require macOS 12 or newer.
+
 ```sh
 # Homebrew (recommended)
 brew tap steipete/tap
 brew install tmuxwatch
-tmuxwatch --version  # should print tmuxwatch 0.9.3
+tmuxwatch --version  # should print tmuxwatch 0.10.0
 
 # Updating later
 brew update
