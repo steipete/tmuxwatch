@@ -1,5 +1,7 @@
 # Changelog
 
+## [Unreleased]
+
 ## [0.10.1] - 2026-09-14
 
 **Highlights:** macOS downloads are signed and notarized
