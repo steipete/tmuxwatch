@@ -1,5 +1,7 @@
 # Changelog
 
+## [Unreleased]
+
 ## [0.10.0] - 2026-09-13
 
 **Highlights:** Search reliably accepts typing, with TUI redraw, keyboard restoration, and Unicode width fixes.
