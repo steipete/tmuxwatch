@@ -12,7 +12,7 @@ Product principles and scope boundaries live in [`VISION.md`](VISION.md); detail
 - **Automation friendly**: `--dump` prints the current tmux topology as JSON for scripts or debugging.
 
 ## Install & Run
-Release binaries for macOS require macOS 12 or newer.
+Release binaries for macOS require macOS 12 or newer and are Developer ID signed by Peter Steinberger and notarized by Apple, so direct downloads pass Gatekeeper. Download archives and `checksums.txt` from the [latest release](https://github.com/steipete/tmuxwatch/releases/latest).
 
 ```sh
 # Homebrew (recommended)

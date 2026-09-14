@@ -1,0 +1,26 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 1 ]; then
+  echo "usage: $0 BINARY" >&2
+  exit 2
+fi
+
+# Inspect the binary itself: an environment variable alone cannot prove the target.
+load_commands=$(otool -arch all -l "$1")
+printf '%s\n' "$load_commands" | awk '
+  $1 == "cmd" { command = $2 }
+  (command == "LC_BUILD_VERSION" && $1 == "minos") ||
+  (command == "LC_VERSION_MIN_MACOSX" && $1 == "version") {
+    found++
+    if ($2 != "12.0" && $2 != "12.0.0") {
+      print "unexpected macOS deployment target: " $2 > "/dev/stderr"
+      bad = 1
+    }
+  }
+  END {
+    if (!found) print "no macOS deployment target found" > "/dev/stderr"
+    if (!found || bad) exit 1
+    print "macOS deployment target verified: 12.0"
+  }
+'

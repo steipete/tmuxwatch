@@ -62,3 +62,31 @@ jobs:
         with:
           version: v2.12.2
           args: --timeout=5m
+
+  release-contract:
+    name: release-contract
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Check release metadata
+        run: |
+          python3 scripts/check-release-metadata.py
+          python3 scripts/test-release-target.py
+      - name: Check workflow syntax
+        run: |
+          brew install actionlint
+          actionlint
+      - name: Build release snapshot and verify macOS deployment targets
+        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7
+        with:
+          distribution: goreleaser
+          version: '~> v2'
+          args: release --snapshot --clean --parallelism=2
