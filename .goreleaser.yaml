@@ -11,6 +11,10 @@ builds:
     binary: tmuxwatch
     env:
       - CGO_ENABLED=0
+      - MACOSX_DEPLOYMENT_TARGET=12.0
+    hooks:
+      post:
+        - cmd: '{{ if eq .Os "darwin" }}./scripts/check-macos-target {{ .Path }}{{ else }}true{{ end }}'
     targets:
       - darwin_amd64
       - darwin_arm64

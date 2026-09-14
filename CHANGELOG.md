@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed
+- Release binaries for macOS are now Developer ID signed and notarized, so direct downloads pass Gatekeeper.
+
 ## [0.10.0] - 2026-09-13
 
 **Highlights:** Search reliably accepts typing, with TUI redraw, keyboard restoration, and Unicode width fixes.
