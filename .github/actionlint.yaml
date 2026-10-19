@@ -1,0 +1,3 @@
+# Allow the GitHub-hosted label until actionlint's runner catalog includes it.
+self-hosted-runner:
+  labels: [xcode-27]

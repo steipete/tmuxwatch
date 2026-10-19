@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed
+- Move macOS CI and release verification to macOS 27 runners while retaining the macOS 12 minimum; add a release dry run without tags, publication, or Homebrew updates.
+
 ## [0.10.1] - 2026-09-14
 
 **Highlights:** macOS downloads are signed and notarized
