@@ -14,6 +14,8 @@ Product principles and scope boundaries live in [`VISION.md`](VISION.md); detail
 ## Install & Run
 Release binaries for macOS require macOS 12 or newer and are Developer ID signed by Peter Steinberger and notarized by Apple, so direct downloads pass Gatekeeper. Download archives and `checksums.txt` from the [latest release](https://github.com/steipete/tmuxwatch/releases/latest).
 
+CI and release verification use Apple Silicon `xcode-27` runners; x86_64 release verification runs under Rosetta. The build configuration and artifact checks keep the macOS 12 minimum explicit. To validate the current version from merged `main` without tags, publication, or Homebrew updates, run `gh workflow run release.yml --repo steipete/tmuxwatch --ref main -f version=0.10.1 -F dry_run=true`.
+
 ```sh
 # Homebrew (recommended)
 brew tap steipete/tap

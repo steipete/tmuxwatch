@@ -7,6 +7,10 @@ on:
         description: SemVer to release (for example 0.10.1)
         required: true
         type: string
+      dry_run:
+        description: Build and verify without tags or publication
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -31,9 +35,10 @@ jobs:
       contents: write
       pull-requests: write
       statuses: read
-    uses: openclaw/release-workflows/.github/workflows/release-go-cli.yml@f613cbfed2b043159c850c353e7facb8c89833b0 # v1.9.0
+    uses: openclaw/release-workflows/.github/workflows/release-go-cli.yml@fc49859568b3781af7663bee48c003fd987dc08b # v1.11.8
     with:
       version: ${{ inputs.version }}
+      dry-run: ${{ inputs.dry_run }}
       repository-type: personal
       homebrew-tap: steipete/homebrew-tap
       homebrew-formula: tmuxwatch
