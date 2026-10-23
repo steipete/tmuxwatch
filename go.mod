@@ -2,7 +2,7 @@ module github.com/steipete/tmuxwatch
 
 go 1.25.12
 
-toolchain go1.25.14
+toolchain go1.27.3
 
 require (
 	charm.land/bubbles/v2 v2.2.1

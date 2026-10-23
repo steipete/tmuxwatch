@@ -12,6 +12,7 @@ builds:
     env:
       - CGO_ENABLED=0
       - MACOSX_DEPLOYMENT_TARGET=12.0
+      - GOTOOLCHAIN=go1.26.10
     hooks:
       post:
         - cmd: '{{ if eq .Os "darwin" }}./scripts/check-macos-target {{ .Path }}{{ else }}true{{ end }}'

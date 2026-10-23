@@ -12,11 +12,15 @@ permissions:
 
 jobs:
   test:
-    name: test
+    name: test (${{ matrix.check }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: ['1.25.12', '1.25.14']
+        include:
+          - go-version: '1.26.10'
+            check: '1.25.12'
+          - go-version: '1.27.3'
+            check: '1.25.14'
     env:
       GOTOOLCHAIN: local
     steps:
@@ -47,6 +51,8 @@ jobs:
   lint:
     name: lint
     runs-on: ubuntu-latest
+    env:
+      GOTOOLCHAIN: local
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -54,7 +60,8 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          # The pinned linter reads Go 1.26 export data; both lines are patched.
+          go-version: '1.26.10'
           cache: true
 
       - name: golangci-lint
@@ -74,7 +81,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: go.mod
+          go-version: '1.26.10'
           cache: true
       - name: Check release metadata
         run: |

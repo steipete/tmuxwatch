@@ -77,7 +77,7 @@ mouse              click `[^]/[v]` to maximise/restore, `[-]/[+]` to collapse/ex
 The UI intentionally avoids third-party “magic”; it leans on Bubble Tea + Lip Gloss primitives so behaviour is explicit.
 
 ## Development Workflow
-Source builds support Go 1.25.12 or newer; the preferred Go 1.25.14 toolchain is recorded in `go.mod`. CI tests both versions. Nix builds use the Go compiler provided by the locked Nix package set.
+The source language minimum remains Go 1.25.12; `go.mod` selects patched Go 1.27.3. CI tests Go 1.26.10 and 1.27.3. Release builds use patched Go 1.26.10 to retain macOS 12 support. Nix builds use the Go compiler provided by the locked Nix package set.
 
 Use the pnpm scripts to mirror the Go tooling:
 ```sh
