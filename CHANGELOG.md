@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-10-23
+
+**Highlights:** Fix certificate validation in release binaries while retaining macOS 12 compatibility.
+
 ### Security
 - Select Go 1.27.3 for source builds and Go 1.26.10 for macOS 12-compatible releases to fix GO-2026-6809, preserving the Go 1.25.12 language minimum.
 

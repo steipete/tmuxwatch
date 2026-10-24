@@ -1,6 +1,6 @@
 # Release Guide
 
-Releases use the shared Go CLI workflow from `openclaw/release-workflows`, pinned to v1.9.0 (`f613cbfed2b043159c850c353e7facb8c89833b0`). Dispatch `.github/workflows/release.yml` from the current protected `main` head; the workflow owns annotated tag creation. Pushing a tag no longer starts a release.
+Releases use the shared Go CLI workflow from `openclaw/release-workflows`, pinned to v1.11.8 (`fc49859568b3781af7663bee48c003fd987dc08b`). Dispatch `.github/workflows/release.yml` from the current protected `main` head; the workflow reuses an existing immutable annotated tag or creates one when absent. Pushing a tag does not start a release.
 
 ## 1. Prepare and merge
 1. Update `cmd/tmuxwatch/main.go`, `package.json`, `flake.nix`, and the README version example.
@@ -32,7 +32,7 @@ Repository prerequisites: protected `main` with required CI checks; Actions `def
 
 ## 3. Publish and Homebrew handoff
 1. Confirm the version is absent from `gh release list --limit 3 --json tagName`, local tags, and remote tags. Never move or replace a release tag.
-2. Dispatch: `gh workflow run release.yml --ref main -f version=X.Y.Z`.
+2. First dispatch `gh workflow run release.yml --ref main -f version=X.Y.Z -F dry_run=true` and require success. Sign and verify an annotated `vX.Y.Z` tag on that exact commit with the fleet release key, then push it. Finally dispatch `gh workflow run release.yml --ref main -f version=X.Y.Z -F dry_run=false`; the workflow reuses the verified immutable tag.
 3. Watch the exact release run through publication and the Homebrew handoff. On retry, the shared workflow reuses the immutable annotated tag and its frozen source.
 4. The six existing archive names remain `tmuxwatch_X.Y.Z_<os>_<arch>.tar.gz` (Windows uses `.zip`). Archives retain `CHANGELOG.md`, `LICENSE`, and `README.md`. The public checksum filename stays `checksums.txt`; no universal archive is added.
 5. The workflow dispatches `steipete/homebrew-tap`, waits for its correlated run, and checks that `Formula/tmuxwatch.rb` URLs and hashes match the verified assets. The tap token needs Contents read and Actions write on that tap.
