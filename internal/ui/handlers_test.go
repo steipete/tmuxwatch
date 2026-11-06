@@ -174,4 +174,25 @@ func TestHandleMouseHoverSetsState(t *testing.T) {
 	}
 }
 
-// TestControlUnderPointer identifies active control zones for hover styling.
+func TestEscLeavesDetailFromALaterTab(t *testing.T) {
+	m := &Model{
+		sessions: []tmux.Session{
+			{ID: "s1", Name: "one"},
+			{ID: "s2", Name: "two"},
+		},
+	}
+	m.tabTitles()
+	for _, tab := range []int{1, 2} {
+		m.setActiveTab(tab)
+		if m.viewMode != viewModeDetail || m.activeTab != tab {
+			t.Fatalf("tab %d setup view=%v active=%d", tab, m.viewMode, m.activeTab)
+		}
+		handled, cmd := m.handleGlobalKey(tea.KeyPressMsg{Code: tea.KeyEscape})
+		if !handled || cmd != nil {
+			t.Fatalf("tab %d handled=%v cmd=%v", tab, handled, cmd)
+		}
+		if m.viewMode != viewModeOverview || m.activeTab != 0 {
+			t.Fatalf("tab %d after esc view=%v active=%d", tab, m.viewMode, m.activeTab)
+		}
+	}
+}

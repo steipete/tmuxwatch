@@ -85,7 +85,7 @@ func (m *Model) handleGlobalKey(msg tea.KeyMsg) (bool, tea.Cmd) {
 		m.searchInput.CursorEnd()
 		return true, m.searchInput.Focus()
 	case "esc":
-		if m.viewMode == viewModeDetail && m.activeTab == 1 {
+		if m.viewMode == viewModeDetail && m.activeTab >= 1 {
 			m.leaveDetail(false)
 			m.updatePreviewDimensions(m.filteredSessionCount())
 			return true, nil
