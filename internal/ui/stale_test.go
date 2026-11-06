@@ -33,6 +33,41 @@ func TestSessionActivityPrefersSessionTimestamp(t *testing.T) {
 	}
 }
 
+func TestFirstPreviewSampleDoesNotClearStale(t *testing.T) {
+	t.Parallel()
+
+	old := time.Now().Add(-2 * staleThreshold)
+	session := tmux.Session{
+		ID:           "s1",
+		Name:         "idle",
+		LastActivity: old,
+		Windows: []tmux.Window{{
+			Active: true,
+			Panes:  []tmux.Pane{{ID: "%1", Active: true, LastActivity: old}},
+		}},
+	}
+	m := &Model{
+		sessions: []tmux.Session{session},
+		previews: make(map[string]*sessionPreview),
+		stale:    make(map[string]struct{}),
+		width:    80,
+		height:   24,
+	}
+	m.ensurePreviewsAndCapture()
+	if !m.previews["s1"].lastChanged.IsZero() {
+		t.Fatal("creating a preview restarted the stale clock")
+	}
+	_, _ = m.Update(paneContentMsg{sessionID: "s1", paneID: "%1", text: "prompt $\n"})
+	m.updateStaleSessions()
+	if !m.isStale("s1") {
+		t.Fatal("first capture of existing text cleared stale")
+	}
+	_, _ = m.Update(paneContentMsg{sessionID: "s1", paneID: "%1", text: "prompt $\nnew line\n"})
+	if m.isStale("s1") {
+		t.Fatal("later output should clear stale")
+	}
+}
+
 // TestUpdateStaleSessionsClearsAfterActivity verifies stale sessions reactivate when new output arrives.
 func TestUpdateStaleSessionsClearsAfterActivity(t *testing.T) {
 	t.Parallel()

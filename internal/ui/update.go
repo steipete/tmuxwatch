@@ -71,8 +71,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if content != preview.lastContent {
 				wasAtBottom := preview.viewport.AtBottom()
 				preview.viewport.SetContent(content)
+				// The first sample replaces an empty baseline. That is not
+				// new activity, so it must not restart the stale clock.
+				firstSample := preview.lastContent == "" && preview.lastChanged.IsZero()
 				preview.lastContent = content
-				preview.lastChanged = time.Now()
+				if !firstSample {
+					preview.lastChanged = time.Now()
+				}
 				if wasAtBottom {
 					preview.viewport.GotoBottom()
 				}
@@ -148,7 +153,7 @@ func (m *Model) ensurePreviewsAndCapture() tea.Cmd {
 				width:  m.width,
 				height: m.height,
 			})
-			preview = &sessionPreview{viewport: &vp, lastChanged: time.Now()}
+			preview = &sessionPreview{viewport: &vp}
 			m.previews[session.ID] = preview
 		}
 		if preview.paneID != pane.ID {
