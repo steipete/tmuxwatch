@@ -67,14 +67,16 @@ func (m *Model) handleGlobalKey(msg tea.KeyMsg) (bool, tea.Cmd) {
 		if m.cursorSession == "" {
 			return true, nil
 		}
-		if m.focusedSession != m.cursorSession {
-			m.focusedSession = m.cursorSession
-			m.resetCtrlC()
-			if preview, ok := m.previews[m.focusedSession]; ok {
-				preview.viewport.GotoBottom()
-				if preview.paneID != "" {
-					return true, fetchPaneVarsCmd(m.client, m.focusedSession, preview.paneID)
-				}
+		if m.focusedSession == m.cursorSession {
+			// Enter focuses a session only once. A second Enter is a pane key.
+			return false, nil
+		}
+		m.focusedSession = m.cursorSession
+		m.resetCtrlC()
+		if preview, ok := m.previews[m.focusedSession]; ok {
+			preview.viewport.GotoBottom()
+			if preview.paneID != "" {
+				return true, fetchPaneVarsCmd(m.client, m.focusedSession, preview.paneID)
 			}
 		}
 		return true, nil
@@ -85,7 +87,7 @@ func (m *Model) handleGlobalKey(msg tea.KeyMsg) (bool, tea.Cmd) {
 		m.searchInput.CursorEnd()
 		return true, m.searchInput.Focus()
 	case "esc":
-		if m.viewMode == viewModeDetail && m.activeTab == 1 {
+		if m.viewMode == viewModeDetail && m.activeTab >= 1 {
 			m.leaveDetail(false)
 			m.updatePreviewDimensions(m.filteredSessionCount())
 			return true, nil

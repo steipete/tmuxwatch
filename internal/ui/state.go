@@ -111,14 +111,14 @@ func (m *Model) enterDetail(sessionID string) {
 	if _, ok := m.sessionByID(sessionID); !ok {
 		return
 	}
-	m.detailSession = sessionID
-	m.focusedSession = sessionID
-	m.cursorSession = sessionID
 	titles := m.tabTitles()
 	idx := m.indexForSession(sessionID)
 	if idx == 0 {
-		idx = 1
+		return
 	}
+	m.detailSession = sessionID
+	m.focusedSession = sessionID
+	m.cursorSession = sessionID
 	m.activeTab = idx
 	m.applyActiveTabSelection(len(titles))
 }
@@ -187,12 +187,8 @@ func (m *Model) applyActiveTabSelection(length int) {
 	sessionID := m.tabSessionIDs[index]
 	m.detailSession = sessionID
 	m.viewMode = viewModeDetail
-	if m.focusedSession == "" {
-		m.focusedSession = sessionID
-	}
-	if m.cursorSession == "" {
-		m.cursorSession = sessionID
-	}
+	m.focusedSession = sessionID
+	m.cursorSession = sessionID
 }
 
 // sessionByID locates a session by identifier if it exists in the snapshot.

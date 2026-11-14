@@ -72,11 +72,16 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				wasAtBottom := preview.viewport.AtBottom()
 				preview.viewport.SetContent(content)
 				preview.lastContent = content
-				preview.lastChanged = time.Now()
+				if preview.sampled && msg.err == nil {
+					preview.lastChanged = time.Now()
+				}
 				if wasAtBottom {
 					preview.viewport.GotoBottom()
 				}
 				m.updateStaleSessions()
+			}
+			if msg.err == nil {
+				preview.sampled = true
 			}
 		}
 	case paneVarsMsg:
@@ -148,13 +153,14 @@ func (m *Model) ensurePreviewsAndCapture() tea.Cmd {
 				width:  m.width,
 				height: m.height,
 			})
-			preview = &sessionPreview{viewport: &vp, lastChanged: time.Now()}
+			preview = &sessionPreview{viewport: &vp}
 			m.previews[session.ID] = preview
 		}
 		if preview.paneID != pane.ID {
 			preview.viewport.SetContent("")
 			preview.paneID = pane.ID
 			preview.lastContent = ""
+			preview.sampled = false
 			preview.vars = nil
 		}
 		shouldCapture := true

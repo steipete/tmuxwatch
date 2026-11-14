@@ -2,6 +2,10 @@
 package ui
 
 import (
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -174,4 +178,129 @@ func TestHandleMouseHoverSetsState(t *testing.T) {
 	}
 }
 
+// TestFocusedEnterSendsKeys ensures Enter on an already focused session is
+// forwarded with tmux send-keys instead of being swallowed as a focus toggle.
+func TestFocusedEnterSendsKeys(t *testing.T) {
+	t.Parallel()
+
+	client, logPath := newRecordingTmux(t)
+	const sessionID = "$1"
+	const paneID = "%9"
+	m := focusedEnterModel(client, sessionID, paneID)
+	m.focusedSession = sessionID
+	m.cursorSession = sessionID
+
+	_, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if cmd == nil {
+		t.Fatal("focused Enter returned no command; send-keys was not called")
+	}
+	if msg := cmd(); msg != nil {
+		t.Fatalf("focused Enter command result = %#v, want nil", msg)
+	}
+	got := readRecording(t, logPath)
+	want := "send-keys -t " + paneID + " Enter\n"
+	if got != want {
+		t.Fatalf("tmux invocation = %q, want %q", got, want)
+	}
+}
+
+// TestUnfocusedEnterFocusesWithoutSendKeys ensures the first Enter focuses the
+// cursor session and does not type into the pane.
+func TestUnfocusedEnterFocusesWithoutSendKeys(t *testing.T) {
+	t.Parallel()
+
+	client, logPath := newRecordingTmux(t)
+	const sessionID = "$1"
+	const paneID = "%9"
+	m := focusedEnterModel(client, sessionID, paneID)
+	m.cursorSession = sessionID
+
+	_, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	if m.focusedSession != sessionID {
+		t.Fatalf("focusedSession = %q, want %q", m.focusedSession, sessionID)
+	}
+	if cmd != nil {
+		if msg := cmd(); msg != nil {
+			if _, ok := msg.(errMsg); ok {
+				t.Fatalf("unfocused Enter command failed: %#v", msg)
+			}
+		}
+	}
+	got := readRecording(t, logPath)
+	if strings.Contains(got, "send-keys") {
+		t.Fatalf("unfocused Enter invoked send-keys: %q", got)
+	}
+}
+
+func focusedEnterModel(client *tmux.Client, sessionID, paneID string) *Model {
+	vp := viewportFor(innerDimension{width: 40, height: 8})
+	return &Model{
+		client: client,
+		sessions: []tmux.Session{{
+			ID: sessionID,
+			Windows: []tmux.Window{{
+				Active: true,
+				Panes:  []tmux.Pane{{ID: paneID, Active: true}},
+			}},
+		}},
+		previews: map[string]*sessionPreview{
+			sessionID: {viewport: &vp, paneID: paneID},
+		},
+		hidden:    make(map[string]struct{}),
+		stale:     make(map[string]struct{}),
+		collapsed: make(map[string]struct{}),
+	}
+}
+
+func newRecordingTmux(t *testing.T) (*tmux.Client, string) {
+	t.Helper()
+	dir := t.TempDir()
+	logPath := filepath.Join(dir, "calls.log")
+	binPath := filepath.Join(dir, "tmux")
+	script := "#!/bin/sh\nprintf '%s\\n' \"$*\" >> " + strconv.Quote(logPath) + "\n"
+	if err := os.WriteFile(binPath, []byte(script), 0o755); err != nil {
+		t.Fatalf("write fake tmux: %v", err)
+	}
+	client, err := tmux.NewClient(binPath)
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+	return client, logPath
+}
+
+func readRecording(t *testing.T, logPath string) string {
+	t.Helper()
+	data, err := os.ReadFile(logPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return ""
+		}
+		t.Fatalf("read fake tmux log: %v", err)
+	}
+	return string(data)
+}
+
 // TestControlUnderPointer identifies active control zones for hover styling.
+
+func TestEscLeavesDetailFromALaterTab(t *testing.T) {
+	m := &Model{
+		sessions: []tmux.Session{
+			{ID: "s1", Name: "one"},
+			{ID: "s2", Name: "two"},
+		},
+	}
+	m.tabTitles()
+	for _, tab := range []int{1, 2} {
+		m.setActiveTab(tab)
+		if m.viewMode != viewModeDetail || m.activeTab != tab {
+			t.Fatalf("tab %d setup view=%v active=%d", tab, m.viewMode, m.activeTab)
+		}
+		handled, cmd := m.handleGlobalKey(tea.KeyPressMsg{Code: tea.KeyEscape})
+		if !handled || cmd != nil {
+			t.Fatalf("tab %d handled=%v cmd=%v", tab, handled, cmd)
+		}
+		if m.viewMode != viewModeOverview || m.activeTab != 0 {
+			t.Fatalf("tab %d after esc view=%v active=%d", tab, m.viewMode, m.activeTab)
+		}
+	}
+}

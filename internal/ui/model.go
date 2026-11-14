@@ -81,6 +81,7 @@ type sessionPreview struct {
 	viewport    *viewport.Model
 	paneID      string
 	lastContent string
+	sampled     bool
 	lastChanged time.Time
 	vars        map[string]string
 }

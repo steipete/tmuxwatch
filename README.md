@@ -64,6 +64,7 @@ ctrl+X             kill every stale session
 ctrl+P             open/close the command palette
 ctrl+m             maximise/restore the focused session
 z / Z              collapse focused session / expand all sessions
+enter              focus a session; subsequent Enter goes to its pane
 q / ctrl+c         quit (double ctrl+c quits even if pane is alive)
 mouse              click `[^]/[v]` to maximise/restore, `[-]/[+]` to collapse/expand, `[x]` to hide; scroll to browse logs
 ```
@@ -77,7 +78,7 @@ mouse              click `[^]/[v]` to maximise/restore, `[-]/[+]` to collapse/ex
 The UI intentionally avoids third-party “magic”; it leans on Bubble Tea + Lip Gloss primitives so behaviour is explicit.
 
 ## Development Workflow
-The source language minimum remains Go 1.25.12; `go.mod` selects patched Go 1.27.3. CI tests Go 1.26.10 and 1.27.3. Release builds use patched Go 1.26.10 to retain macOS 12 support. Nix builds use the Go compiler provided by the locked Nix package set.
+The source language minimum remains Go 1.25.12; `go.mod` selects patched Go 1.27.4. CI tests Go 1.26.11 and 1.27.4. Release builds use patched Go 1.26.11 to retain macOS 12 support. Nix builds use the Go compiler provided by the locked Nix package set.
 
 Use the pnpm scripts to mirror the Go tooling:
 ```sh
@@ -115,3 +116,5 @@ Guidelines live in `docs/idiomatic-go.md`; treat it as required reading. Key poi
 
 ## License
 Released under the [MIT License](./LICENSE).
+
+Initial pane previews establish a baseline without marking old sessions active. Only later successful output changes refresh preview activity. Detail shortcuts ignore sessions excluded by hiding or search.

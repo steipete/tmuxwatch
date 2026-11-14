@@ -17,9 +17,9 @@ jobs:
     strategy:
       matrix:
         include:
-          - go-version: '1.26.10'
+          - go-version: '1.26.11'
             check: '1.25.12'
-          - go-version: '1.27.3'
+          - go-version: '1.27.4'
             check: '1.25.14'
     env:
       GOTOOLCHAIN: local
@@ -61,7 +61,7 @@ jobs:
         uses: actions/setup-go@v7
         with:
           # The pinned linter reads Go 1.26 export data; both lines are patched.
-          go-version: '1.26.10'
+          go-version: '1.26.11'
           cache: true
 
       - name: golangci-lint
@@ -81,7 +81,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '1.26.10'
+          go-version: '1.26.11'
           cache: true
       - name: Check release metadata
         run: |
