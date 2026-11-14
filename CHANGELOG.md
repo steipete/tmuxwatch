@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Fixed
+- Forward Enter to an already focused pane, leave every detail tab with Escape, reject detail requests for filtered-out sessions, and keep pane input on the displayed tab. Thanks @SebTardif.
+- Keep old sessions stale on the first preview capture, including empty captures, and recognize subsequent output as activity. Thanks @SebTardif.
+
+### Changed
+- Use patched Go 1.27.4 for source builds and Go 1.26.11 for macOS 12-compatible releases; update pflag to 1.1.0.
+
 ## [0.10.2] - 2026-10-23
 
 **Highlights:** Fix certificate validation in release binaries while retaining macOS 12 compatibility.

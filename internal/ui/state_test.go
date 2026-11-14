@@ -71,6 +71,44 @@ func TestSetActiveTabUpdatesViewMode(t *testing.T) {
 	}
 }
 
+func TestEnterDetailSkipsAHiddenSession(t *testing.T) {
+	t.Parallel()
+
+	m := &Model{
+		sessions: []tmux.Session{
+			{ID: "s1", Name: "one"},
+			{ID: "s2", Name: "two"},
+		},
+		hidden: map[string]struct{}{"s2": {}},
+	}
+	m.focusedSession = "s1"
+	m.enterDetail("s2")
+	if m.focusedSession != "s1" || m.detailSession != "" || m.viewMode != viewModeOverview || m.activeTab != 0 {
+		t.Fatalf("hidden detail focus=%q detail=%q view=%v tab=%d", m.focusedSession, m.detailSession, m.viewMode, m.activeTab)
+	}
+
+	visible := &Model{
+		sessions: []tmux.Session{
+			{ID: "s1", Name: "one"},
+			{ID: "s2", Name: "two"},
+		},
+	}
+	visible.enterDetail("s2")
+	if visible.focusedSession != "s2" || visible.detailSession != "s2" || visible.activeTab != 2 || visible.viewMode != viewModeDetail {
+		t.Fatalf("visible detail focus=%q detail=%q view=%v tab=%d", visible.focusedSession, visible.detailSession, visible.viewMode, visible.activeTab)
+	}
+}
+
+func TestSwitchingDetailTabMovesKeyTarget(t *testing.T) {
+	t.Parallel()
+	m := &Model{sessions: []tmux.Session{{ID: "s1", Name: "one"}, {ID: "s2", Name: "two"}}}
+	m.enterDetail("s1")
+	m.setActiveTab(2)
+	if m.detailSession != "s2" || m.focusedSession != "s2" || m.cursorSession != "s2" {
+		t.Fatalf("detail=%q focus=%q cursor=%q", m.detailSession, m.focusedSession, m.cursorSession)
+	}
+}
+
 // TestToggleCollapsed ensures session collapse state toggles predictably.
 func TestToggleCollapsed(t *testing.T) {
 	t.Parallel()
