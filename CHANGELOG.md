@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.10.3] - 2026-11-15
+
+**Highlights:** Fix pane input and navigation, keep old sessions stale on first preview, and update patched Go toolchains.
+
 ### Fixed
 - Forward Enter to an already focused pane, leave every detail tab with Escape, reject detail requests for filtered-out sessions, and keep pane input on the displayed tab. Thanks @SebTardif.
 - Keep old sessions stale on the first preview capture, including empty captures, and recognize subsequent output as activity. Thanks @SebTardif.
